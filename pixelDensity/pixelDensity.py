@@ -4,16 +4,16 @@ from matplotlib import pyplot as plt
 
 img = cv2.imread('example.pgm')
 
-print img.shape
-
 sum = 0
 
 a = []
 
-for j in range(1,2300):
+height, width, channels = img.shape
+
+for j in range(1,width):
 
 	sum = 0;
-	for i in range (1,290):
+	for i in range (1,height):
 		px = img[i,j][0]
 		if px == 0:
 			sum +=1
