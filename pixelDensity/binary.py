@@ -57,9 +57,12 @@ blur = cv2.GaussianBlur(img,(5,5),0)
 ret3,outsu2 = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
 
 
+
+
+
 titles = ['Original Image','Binary','Binary Inverse','Trunc','Tozero','Inverse Tozero', 'Static at 190', 'Static at 100','Adaptive Mean Thresholding','Adaptive Gaussian Thresholding','Outsu','Outsu After Gaussian']
 images = [originalImage, binaryThresh, inversBinary, trunc, tozero, inverseTozero, staticBinary190, staticBinary100,meanAddaptive,gaussianAddaptive, outsu, outsu2 ]
-
+#show all images sep
 cv2.imshow("Static Threshold Set At 190 ",staticBinary190)
 cv2.imshow("Static Threshold Set At 100 ",staticBinary100)
 cv2.imshow('Binary', binaryThresh)
@@ -72,6 +75,7 @@ cv2.imshow('Adaptive Gaussian Thresholding',gaussianAddaptive)
 cv2.imshow('Outsu', outsu)
 cv2.imshow('Outsu After Gaussian', outsu2)
 
+#show everything
 for i in xrange(12):
     plt.subplot(6,2,i+1),plt.imshow(images[i],'gray')
     plt.title(titles[i])
@@ -80,5 +84,14 @@ for i in xrange(12):
 plt.show()
 
 
+
+
+
+
+#save Image
+
+cv2.imwrite('ResultImage.jpg', outsu2)
+# close everything
 cv2.waitKey(0)
 cv2.destroyAllWindows()
+
