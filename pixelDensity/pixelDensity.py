@@ -9,18 +9,32 @@ def binarize(img):
 
 
 def rotateImage(img):
+	
 	img = cv2.copyMakeBorder(img,100,100,100,100,cv2.BORDER_CONSTANT,value=[255,255,255])
 	
-	height, width = img.shape
+	resultImage = img
+	maxheight = 0
 
-	M = cv2.getRotationMatrix2D((width/2,height/2),1,1)
-	img = cv2.warpAffine(img,M,(width,height))
+	for i in np.arange(-5,5,0.2):
+	#img = cv2.copyMakeBorder(img,100,100,100,100,cv2.BORDER_CONSTANT,value=[255,255,255])
+		height, width = img.shape
+		M = cv2.getRotationMatrix2D((width/2,height/2),i,1)
+		rotatedImage = cv2.warpAffine(img,M,(width,height))
 
-	height, width = img.shape
+		height, width = img.shape	
 
-	img = img[100:height-101,100:width-101]
+		rotatedImage = rotatedImage[100:height-101,100:width-101]
 
-	return np.asarray(img)
+		tempmax = max(calcHorPixelDensity(rotatedImage))
+
+		if tempmax > maxheight:
+			maxheight = tempmax
+			resultImage = rotatedImage
+
+
+
+
+	return np.asarray(resultImage)
 
 def calcVerPixelDensity(img):
 	vertical_pixel_density = []
@@ -65,13 +79,14 @@ def CalcSeperators(vertical_pixel_density,minBoxWidth,threshold):
 
 	return seperators
 
-def drawSeperators(img, seperators):
+def drawSeperators(img, seperators, padding):
 	height, width = img.shape
 
 	for i in range(0,len(seperators)):
 		for j in range(0,height-1):
-			xval = seperators[i]
-			img[j][xval] = 0
+			xval = seperators[i] + padding
+			if xval < width:
+				img[j][xval] = 0
 
 	cv2.imshow('image',img)
 	cv2.waitKey(0)
@@ -115,6 +130,7 @@ subimg = img[minheight[0]:height-1,0:width-1]
 if __name__ == "__main__":
 	minBoxWidth = 75
 	threshold = 10
+	padding = 5
 
 	img = cv2.imread('example.pgm',0)
 	img = binarize(img)
@@ -126,7 +142,7 @@ if __name__ == "__main__":
 
 	drawDensities(h_pixel_density, v_pixel_density)
 
-	drawSeperators(img, seperators)
+	drawSeperators(img, seperators, padding)
 
 
 
