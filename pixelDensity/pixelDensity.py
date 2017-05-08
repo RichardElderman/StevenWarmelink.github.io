@@ -16,7 +16,7 @@ def rotateImage(img):
 
 	return np.asarray(img)
 
-def calcHorPixelDensity(img):
+def calcVerPixelDensity(img):
 	vertical_pixel_density = []
 
 	height, width, channels = img.shape
@@ -31,7 +31,7 @@ def calcHorPixelDensity(img):
 
 	return vertical_pixel_density
 
-def calcVerPixelDensity(img):
+def calcHorPixelDensity(img):
 	horizontal_pixel_density = []
 
 	height, width, channels = img.shape
@@ -69,6 +69,7 @@ def drawSeperators(img, seperators):
 
 	cv2.imshow('image',img)
 	cv2.waitKey(0)
+	cv2.destroyAllWindows()
 
 
 def drawDensities(h_pixel_density, v_pixel_density):
@@ -90,18 +91,6 @@ for i in range(0,len(vertical_pixel_density)):
 	if (val < (v_mean - 2*v_stdd)) or (val > (v_mean + 2*v_stdd)):
 		minwidth.append(i)
 
-plt.subplot(2,1,1)
-plt.plot(vertical_pixel_density);
-plt.title('Vertical pixel density')
-
-for i in range(0,len(seperators)):
-	x = seperators[i]
-	plt.plot([x,x],[0,height])
-
-
-
-
-
 h_mean = np.mean(horizontal_pixel_density)
 h_stdd = np.std(horizontal_pixel_density)
 
@@ -113,31 +102,7 @@ for i in range(0,len(horizontal_pixel_density)):
 	if (val < (h_mean - 2*h_stdd)) or (val > (h_mean + 2*h_stdd)):
 		minheight.append(i)
 
-
-plt.subplot(2,1,2)
-plt.plot(horizontal_pixel_density);
-plt.title('Horizontal pixel density')
-#plt.show();
-
-print  "minwidth", minwidth, "minheight", minheight
-
-for i in range(0,len(seperators)):
-	for j in range(0,height-1):
-		xval = seperators[i]
-		#img[j][xval] = [0,0,0]
-
 subimg = img[minheight[0]:height-1,0:width-1]
-
-
-cv2.imshow('image',img)
-cv2.waitKey(0)
-#cv2.imshow('image',subimg)
-#cv2.waitKey(0)
-"""
-
-
-"""
-cv2.destroyAllWindows()
 """
 
 
