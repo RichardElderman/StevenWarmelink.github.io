@@ -2,15 +2,21 @@ import cv2
 import numpy as np
 from matplotlib import pyplot as plt
 
+def binarize(img):
+	blur = cv2.GaussianBlur(img,(5,5),0)
+	ret3,otsu = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+	return otsu
+
+
 def rotateImage(img):
 	img = cv2.copyMakeBorder(img,100,100,100,100,cv2.BORDER_CONSTANT,value=[255,255,255])
 	
-	height, width, channels = img.shape
+	height, width = img.shape
 
 	M = cv2.getRotationMatrix2D((width/2,height/2),1,1)
 	img = cv2.warpAffine(img,M,(width,height))
 
-	height, width, channels = img.shape
+	height, width = img.shape
 
 	img = img[100:height-101,100:width-101]
 
@@ -19,12 +25,12 @@ def rotateImage(img):
 def calcVerPixelDensity(img):
 	vertical_pixel_density = []
 
-	height, width, channels = img.shape
+	height, width = img.shape
 	for j in range(1,width):
 
 		sum = 0;
 		for i in range (1,height):
-			px = img[i,j][0]
+			px = img[i,j]
 			if px == 0:
 				sum +=1
 		vertical_pixel_density.append(sum);
@@ -34,12 +40,12 @@ def calcVerPixelDensity(img):
 def calcHorPixelDensity(img):
 	horizontal_pixel_density = []
 
-	height, width, channels = img.shape
+	height, width = img.shape
 	for j in range(1,height):
 
 		sum = 0;
 		for i in range (1,width):
-			px = img[j,i][0]
+			px = img[j,i]
 			if px == 0:
 				sum +=1
 		horizontal_pixel_density.append(sum);
@@ -60,12 +66,12 @@ def CalcSeperators(vertical_pixel_density,minBoxWidth,threshold):
 	return seperators
 
 def drawSeperators(img, seperators):
-	height, width, channels = img.shape
+	height, width = img.shape
 
 	for i in range(0,len(seperators)):
 		for j in range(0,height-1):
 			xval = seperators[i]
-			img[j][xval] = [0,0,0]
+			img[j][xval] = 0
 
 	cv2.imshow('image',img)
 	cv2.waitKey(0)
@@ -108,9 +114,10 @@ subimg = img[minheight[0]:height-1,0:width-1]
 
 if __name__ == "__main__":
 	minBoxWidth = 75
-	threshold = 4
+	threshold = 10
 
-	img = cv2.imread('example.pgm')
+	img = cv2.imread('example.pgm',0)
+	img = binarize(img)
 	img = rotateImage(img)
 
 	h_pixel_density = calcHorPixelDensity(img)
