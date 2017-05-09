@@ -50,18 +50,18 @@ meanAddaptive = cv2.adaptiveThreshold(tempimg,255,cv2.ADAPTIVE_THRESH_MEAN_C,cv2
 gaussianAddaptive = cv2.adaptiveThreshold(tempimg,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY,11,5)
 
 # Otsu's thresholding
-ret2,outsu = cv2.threshold(img,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+ret2,otsu = cv2.threshold(img,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
 
 # Otsu's thresholding after Gaussian filtering
 blur = cv2.GaussianBlur(img,(5,5),0)
-ret3,outsu2 = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+ret3,otsu2 = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
 
 
 
 
 
 titles = ['Original Image','Binary','Binary Inverse','Trunc','Tozero','Inverse Tozero', 'Static at 190', 'Static at 100','Adaptive Mean Thresholding','Adaptive Gaussian Thresholding','Outsu','Outsu After Gaussian']
-images = [originalImage, binaryThresh, inversBinary, trunc, tozero, inverseTozero, staticBinary190, staticBinary100,meanAddaptive,gaussianAddaptive, outsu, outsu2 ]
+images = [originalImage, binaryThresh, inversBinary, trunc, tozero, inverseTozero, staticBinary190, staticBinary100,meanAddaptive,gaussianAddaptive, otsu, otsu2 ]
 #show all images sep
 cv2.imshow("Static Threshold Set At 190 ",staticBinary190)
 cv2.imshow("Static Threshold Set At 100 ",staticBinary100)
@@ -72,8 +72,8 @@ cv2.imshow('Tozero', tozero)
 cv2.imshow('Tozero Inverse',inverseTozero)
 cv2.imshow('Adaptive Mean Thresholding',meanAddaptive)
 cv2.imshow('Adaptive Gaussian Thresholding',gaussianAddaptive)
-cv2.imshow('Outsu', outsu)
-cv2.imshow('Outsu After Gaussian', outsu2)
+cv2.imshow('Outsu', otsu)
+cv2.imshow('Outsu After Gaussian', otsu2)
 
 #show everything
 for i in xrange(12):
@@ -90,7 +90,7 @@ plt.show()
 
 #save Image
 
-cv2.imwrite('ResultImage.jpg', outsu2)
+cv2.imwrite('ResultImage.jpg', otsu2)
 # close everything
 cv2.waitKey(0)
 cv2.destroyAllWindows()
