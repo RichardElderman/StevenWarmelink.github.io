@@ -308,7 +308,7 @@ if __name__ == "__main__":
 	h_pixel_density = calcHorPixelDensity(img)
 	v_pixel_density = calcVerPixelDensity(img)
 
-	#drawDensities(h_pixel_density, v_pixel_density)
+	drawDensities(h_pixel_density, v_pixel_density)
 	
 	img = cropImage(img,horizontal_density_threshold,vertical_density_threshold, h_pixel_density, v_pixel_density)
 	
@@ -317,7 +317,7 @@ if __name__ == "__main__":
 	
 	seperators = CalcSeperators(v_pixel_density, minBoxWidth, threshold,padding)
 
-	#drawDensities(h_pixel_density, v_pixel_density)
+	drawDensities(h_pixel_density, v_pixel_density)
 
 
 
