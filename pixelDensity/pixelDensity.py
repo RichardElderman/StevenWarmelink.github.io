@@ -226,9 +226,9 @@ def resizeImages(images):
 			height, width = image.shape
 			h_diff = 128 - height
 			if h_diff%2 == 0:
-				image = cv2.copyMakeBorder(image,h_diff/2,h_diff/2,0,0,cv2.BORDER_CONSTANT,value=[255,255,255])
+				image = cv2.copyMakeBorder(image,int(h_diff/2),int(h_diff/2),0,0,cv2.BORDER_CONSTANT,value=[255,255,255])
 			else:
-				image = cv2.copyMakeBorder(image,1+h_diff/2,h_diff/2,0,0,cv2.BORDER_CONSTANT,value=[255,255,255])
+				image = cv2.copyMakeBorder(image,int(1+h_diff/2),int(h_diff/2),0,0,cv2.BORDER_CONSTANT,value=[255,255,255])
 
 		if width > 128:
 			height, width = image.shape
@@ -242,12 +242,10 @@ def resizeImages(images):
 			height, width = image.shape
 			w_diff = 128 - width
 			if w_diff%2 == 0:
-				image = cv2.copyMakeBorder(image,0,0,w_diff/2,w_diff/2,cv2.BORDER_CONSTANT,value=[255,255,255])
+				image = cv2.copyMakeBorder(image,0,0,int(w_diff/2),int(w_diff/2),cv2.BORDER_CONSTANT,value=[255,255,255])
 			else:
-				image = cv2.copyMakeBorder(image,0,0,1+w_diff/2,w_diff/2,cv2.BORDER_CONSTANT,value=[255,255,255])
-
+				image = cv2.copyMakeBorder(image,0,0,1+int(w_diff/2),int(w_diff/2),cv2.BORDER_CONSTANT,value=[255,255,255])
 		resizedImages.append(image)
-
 	return resizedImages
 
 def splitImage(img, seperators):
@@ -289,6 +287,48 @@ def drawDensities(h_pixel_density, v_pixel_density):
 	plt.title('Horizontal pixel density')
 	plt.show();
 
+#Crop/enlarge the image such that it fits within a 128x128 square
+def cropSquare(image):
+	height, width = image.shape
+	min_horizontal_pixel = width
+	max_horizontal_pixel = 0
+	min_vertical_pixel = height
+	max_vertical_pixel = 0
+
+	#Find the minimal and maximal black pixel values on both the vertical and horizontal axis. 
+	for v in range (0,height-1):
+		for h in range(0,width-1):
+			px = image[v,h]
+			if px == 0 and h < min_horizontal_pixel:
+				min_horizontal_pixel = h
+			if px == 0 and h > max_horizontal_pixel:
+				max_horizontal_pixel = h
+			if px == 0 and v < min_vertical_pixel:
+				min_vertical_pixel = v
+			if px == 0 and v > max_vertical_pixel:
+				max_vertical_pixel = v
+
+	#Crop the image using the previously found pixel values. This effectively removes the white borders around the characters.
+	cropped_image = image[min_vertical_pixel:max_vertical_pixel, min_horizontal_pixel:max_horizontal_pixel]
+
+	#Pad the image with white pixels on either the vertical or horizontal sides such that the image becomes a square
+	if((max_vertical_pixel-min_vertical_pixel) > (max_horizontal_pixel-min_horizontal_pixel)):
+		w_diff = (max_vertical_pixel-min_vertical_pixel)-(max_horizontal_pixel-min_horizontal_pixel)
+		if w_diff%2 == 0:
+			cropped_image = cv2.copyMakeBorder(cropped_image,0,0,int(w_diff/2),int(w_diff/2),cv2.BORDER_CONSTANT,value=[255,255,255])
+		else:
+			cropped_image = cv2.copyMakeBorder(cropped_image,0,0,1+int(w_diff/2),int(w_diff/2),cv2.BORDER_CONSTANT,value=[255,255,255])
+	if((max_horizontal_pixel - min_horizontal_pixel) > (max_vertical_pixel - min_vertical_pixel)):
+		h_diff = (max_horizontal_pixel - min_horizontal_pixel) - (max_vertical_pixel - min_vertical_pixel)
+		if h_diff%2 == 0:
+			cropped_image = cv2.copyMakeBorder(cropped_image,int(h_diff/2),int(h_diff/2),0,0,cv2.BORDER_CONSTANT,value=[255,255,255])
+		else:
+			cropped_image = cv2.copyMakeBorder(cropped_image,int(1+h_diff/2),int(h_diff/2),0,0,cv2.BORDER_CONSTANT,value=[255,255,255])
+
+	#Resize the image to 128x128 pixels
+	cropped_image = cv2.resize(cropped_image, (128, 128))
+	return cropped_image
+
 
 if __name__ == "__main__":
 	minBoxWidth = 75
@@ -325,6 +365,10 @@ if __name__ == "__main__":
 
 	images = splitImage(img, seperators)
 
+	#Fit each image/character into a 128 by 128 square.
+	square_images = []
+	for image in images:
+		square_images.append(cropSquare(image))
 	
 
 	"""plt.subplot(len(images),1,1),plt.imshow(img,'gray')
@@ -333,6 +377,6 @@ if __name__ == "__main__":
 		plt.xticks([]),plt.yticks([])
 	plt.show()"""
 
-	showImages(images)
+	showImages(square_images)
 
-	writeImages(images)
+	writeImages(square_images)
