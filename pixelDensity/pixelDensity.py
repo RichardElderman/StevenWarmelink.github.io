@@ -281,9 +281,9 @@ def resizeImages(images):
 			height, width = image.shape
 			h_diff = 128 - height
 			if h_diff%2 == 0:
-				image = cv2.copyMakeBorder(image,h_diff/2,h_diff/2,0,0,cv2.BORDER_CONSTANT,value=[255,255,255])
+				image = cv2.copyMakeBorder(image,int(h_diff/2),int(h_diff/2),0,0,cv2.BORDER_CONSTANT,value=[255,255,255])
 			else:
-				image = cv2.copyMakeBorder(image,1+h_diff/2,h_diff/2,0,0,cv2.BORDER_CONSTANT,value=[255,255,255])
+				image = cv2.copyMakeBorder(image,1+int(h_diff/2),int(h_diff/2),0,0,cv2.BORDER_CONSTANT,value=[255,255,255])
 
 		# if image width is too large, take a subimage which is evenly cropped from left and right
 		if width > 128:
@@ -299,9 +299,9 @@ def resizeImages(images):
 			height, width = image.shape
 			w_diff = 128 - width
 			if w_diff%2 == 0:
-				image = cv2.copyMakeBorder(image,0,0,w_diff/2,w_diff/2,cv2.BORDER_CONSTANT,value=[255,255,255])
+				image = cv2.copyMakeBorder(image,0,0,int(w_diff/2),int(w_diff/2),cv2.BORDER_CONSTANT,value=[255,255,255])
 			else:
-				image = cv2.copyMakeBorder(image,0,0,1+w_diff/2,w_diff/2,cv2.BORDER_CONSTANT,value=[255,255,255])
+				image = cv2.copyMakeBorder(image,0,0,1+int(w_diff/2),int(w_diff/2),cv2.BORDER_CONSTANT,value=[255,255,255])
 
 		# add resized image to list of resized images
 		resizedImages.append(image)
