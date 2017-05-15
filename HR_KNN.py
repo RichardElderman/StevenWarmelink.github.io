@@ -29,7 +29,6 @@ def readLabelledData():
 def calcHammingDistance(new_image, labelled_image):
 	if(new_image.shape != labelled_image.shape):
 		print('ERROR: Image dimensions must agree')
-	height, width = new_image.shape
 	hamming_distance = np.count_nonzero(new_image!=labelled_image)
 	return hamming_distance
 
@@ -59,7 +58,6 @@ def KNN():
 	final_list = []
 
 	total_correct = 0
-
 	shuffle(labelled_data)
 	
 	#16 fold cross validation
@@ -85,16 +83,16 @@ def KNN():
 
 			#Find a labelled image with the same utf code as the 'final class'
 			#Store both the new image and the labelled image in the final list
-			for (labelled_utf, labelled_image) in train_data:
-				if(labelled_utf == final_class):
-					final_list.append((new_image, labelled_image))
-					break
+			#for (labelled_utf, labelled_image) in train_data:
+			#	if(labelled_utf == final_class):
+			#		final_list.append((new_image, labelled_image))
+			#		break
 
-		#Show each new image with a matched image to validate it
-		#for (new_image, labelled_image) in final_list:
-		#	cv2.imshow("new image", new_image)
-		#	cv2.imshow("labelled", labelled_image)
-		#	cv2.waitKey(0)
+			#Show each new image with a matched image to validate it
+			#for (new_image, labelled_image) in final_list:
+			#	cv2.imshow("new image", new_image)
+			#	cv2.imshow("labelled", labelled_image)
+			#	cv2.waitKey(0)
 
 		print('in round ' + repr(x) + ' ' + repr(correct/10) + '% was correct')
 		total_correct += correct
