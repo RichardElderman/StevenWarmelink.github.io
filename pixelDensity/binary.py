@@ -33,7 +33,15 @@ for i in range(1, width):
             staticBinary100[i, j] = 255
 
 
+def rgb2gray(rgb):
+    return np.dot(rgb[...,:3], [0.299, 0.587, 0.114])
 
+def convertToGrayScale(imageName):
+    img = cv2.imread(imageName)
+    gray = rgb2gray(img)
+    plt.imshow(gray, cmap=plt.get_cmap('gray'))
+    plt.show()
+    return gray
 
 
 ret,binaryThresh = cv2.threshold(originalImage,127,255,cv2.THRESH_BINARY)
