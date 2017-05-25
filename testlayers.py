@@ -81,12 +81,21 @@ def convLayer(dat, mask):
 def neuralNetwork(nLayers, nNodes):
 	return 0
 
-def transImage(img):
-	ncol, nrow = np.shape(img)
+def genInputLayer(img):
+    layer = np.zeros(shape=(128, 128))
+    width, hight = img.shape
+    for i in range(1,width):
+        for j in range(1,hight):
+            layer[i][j]=img[i,j]
+
+    return layer
+
+def transformImage(input):
+	ncol, nrow =input.shape
 	out = np.zeros(shape=(nrow, ncol))
 	for r in range(0, nrow):
 		for c in range(0, ncol):
-			if(img[r,c]==255):
+			if(input[r,c]==255):
 				out[r,c] = -1
 			else:
 				out[r,c] = 1
@@ -108,7 +117,8 @@ mask3 = np.matrix([[1,-1,-1],
 
 
 def performtest(dat):
-    testim = transImage(dat)
+    inputLayer = genInputLayer(dat)
+    testim = transformImage(inputLayer)
     print(testim)
     convIm = convLayer(testim, mask3)
     print(convIm)
@@ -175,5 +185,8 @@ def performtest(dat):
 
 if __name__ == "__main__":
     images = readData()
+
+
+
     for i in range(0, len(images)):
         performtest(images[i])
