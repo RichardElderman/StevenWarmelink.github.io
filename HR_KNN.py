@@ -7,8 +7,10 @@ import numpy as np
 #Reads all of the new unlabelled images
 def readData():
 	train_data = []
+	num_files = len(os.listdir('TestFolder'))
+	print('Reading train data:')
 	for i, file in enumerate(os.listdir('TestFolder')):
-		print(i,  end="\r")
+		print(round((i/num_files)*100,2),  end="\r")
 		if file.endswith('.jpg'):
 			img = cv2.imread('TestFolder/' + file, 0)
 			train_data.append(img)
@@ -17,10 +19,25 @@ def readData():
 #Reads all of the labelled images
 def readLabelledData():
 	labelled_data = []
-	for i, file in enumerate(os.listdir('Labelled')):
-		print(i,  end="\r")
+	num_files = len(os.listdir('labelled'))
+	print('Reading labelled data:')
+	for i, file in enumerate(os.listdir('labelled')):
+		print(round((i/num_files)*100,2),  end="\r")
 		if file.endswith('.pgm'):
-			img = cv2.imread('Labelled/' + file, 0)
+			img = cv2.imread('labelled/' + file, 0)
+			utf = file[:4]
+			labelled_data.append((utf,img))
+	return labelled_data
+
+#Reads all of the font images
+def readFontData():
+	labelled_data = []
+	num_files = len(os.listdir('labelled/font_data'))
+	print('Reading font data:')
+	for i, file in enumerate(os.listdir('labelled/font_data')):
+		print(round((i/num_files)*100,2),  end="\r")
+		if file.endswith('.pgm'):
+			img = cv2.imread('labelled/font_data/' + file, 0)
 			utf = file[:4]
 			labelled_data.append((utf,img))
 	return labelled_data
@@ -49,9 +66,13 @@ def mostCommonClass(top_k_matches):
 
 #The K Nearest Neightbour algorithm
 def KNN():
-	k = 15
+	k = 3
+	print('running KNN with K=' + repr(k))
+
 	#The training data (with labels)
 	labelled_data = readLabelledData()
+	#The extra labelled data from the fonts
+	font_data = readFontData()
 	#The new test data
 	test_data = readData()
 	#A list to store the new images with a label
@@ -60,15 +81,20 @@ def KNN():
 	total_correct = 0
 	shuffle(labelled_data)
 	
+	print('Starting KNN:')
 	#16 fold cross validation
 	for x in range(0, 16):
 		test_data = labelled_data[x*1000:x*1000+1000]
 		train_data = labelled_data[0:x*1000] + labelled_data[x*1000+1000:]
 		correct = 0
 
+		#You can add the font data to the train data:
+		train_data = train_data + font_data
+
+
 		#For each new image in the test set
 		for i, (new_utf,new_image) in enumerate(test_data):
-			print(i/10,  end="\r")
+			print(i/len(test_data),  end="\r")
 			distance_list = []
 			#Calculate the distance between the new image and all of the labelled images
 			for (labelled_utf, labelled_image) in train_data:
