@@ -115,6 +115,10 @@ mask3 = np.matrix([[1,-1,-1],
 				   [-1,1,-1],
 				   [-1,-1,1]])
 
+def predefinedFeature(dat):
+	return 0
+
+
 
 def performtest(dat):
     inputLayer = genInputLayer(dat)

@@ -237,6 +237,7 @@ public class mainFrame extends javax.swing.JFrame {
                    }     
                     } 
                     
+                    
                     int counter=0;
                     for(int i=0; i<=inputHeight-1;i++){
                         System.out.println();
@@ -250,15 +251,24 @@ public class mainFrame extends javax.swing.JFrame {
                 }
                 case 6: //" \ "
                 {
+                    if(thickness != 1){
+                        thickness=1;
+                    }
                     System.out.println(mapCombo.getSelectedItem());
                     int temp=0;
                     for(int i=0; i<=inputHeight-1;i++){
+                        
+                        int temp2=0;
                    for(int j=0;j<=temp;j++){
                        dimentions[i][j]=-1;
+                       temp2=j;
                    }
-                   for(int j=temp;j<=thickness;j++){
+                   for(int j=temp;j<=temp2+thickness-1;j++){
                        dimentions[i][j]=1;
                        
+                   }
+                   for(int j=temp2+thickness;j<=inputWidth-1;j++){
+                       dimentions[i][j]=-1;
                    }
                    temp++;
                     }
@@ -279,6 +289,27 @@ public class mainFrame extends javax.swing.JFrame {
                 {
                     System.out.println(mapCombo.getSelectedItem());
                     
+                   for(int i=0;i<=inputHeight-1;i++){for(int j=0;j<=inputWidth-1;j++){dimentions[i][j]=-1;}}
+                   int co=inputWidth-1;
+                   
+                   for(int i=0;i<=inputHeight-1;i++){
+                       if(co!=0){
+                           dimentions[i][co]=1;
+                            co--;
+                       }
+                      
+                   }
+                     
+                    
+                    int counter=0;
+                    for(int i=0; i<=inputHeight-1;i++){
+                        System.out.println();
+                   for(int j=0;j<=inputWidth-1;j++){
+                       System.out.print(dimentions[i][j]);
+                       nods.get(counter).setText(""+dimentions[i][j]);
+                       counter++;
+                   }     
+                    } 
                     break;
                 }
             }
