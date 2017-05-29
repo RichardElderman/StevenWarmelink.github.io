@@ -207,6 +207,7 @@ def CalcSeperators(vertical_pixel_density,minBoxWidth,threshold,padding):
 						prev_loc = i
 						if(i+padding) < len(vertical_pixel_density)-1:
 							seperators.append(i+padding)
+	seperators.append(len(vertical_pixel_density)-1)
 
 	return seperators
 
@@ -254,7 +255,7 @@ def removeSubimagesOutsideRange(images):
 	rmv_array = sorted(rmv_array, reverse=True)
 	resultImages = []
 
-	for i in range(0,len(images)-1):
+	for i in range(0,len(images)):
 		if not (i in rmv_array):
 			resultImages.append(images[i])
 
@@ -322,9 +323,15 @@ def splitImage(img, seperators):
 		for i in range (0,len(seperators)-2):
 			images.append(createSubImage(img,img[0:height-1,seperators[i]:seperators[i+1]]))	
 
-		images.append(createSubImage(img,img[0:height-1,seperators[len(seperators)-1]:width-1]))	
+		images.append(createSubImage(img,img[0:height-1,seperators[len(seperators)-2]:seperators[len(seperators)-1]]))	
+
+	print len(images)
+
+	showImages(images)
 
 	images = removeSubimagesOutsideRange(images)
+	
+	print len(images)
 
 	images = resizeImages(images)
 
@@ -401,6 +408,10 @@ def cropSquare(image):
 
 if __name__ == "__main__":
 	
+	img = cv2.imread('example.pgm',0)
+	img = binarize(img)
+	height, width = img.shape
+
 	# Minimum distance between two seperators
 	minBoxWidth = 75
 	# Pixeldensity has to be below this threshold to trigger a seperator
@@ -409,34 +420,40 @@ if __name__ == "__main__":
 	padding = 5
 	# Pixel density threshold for cropping horizontal lines
 	# TODO:: Replace by dynamic implementation  
-	horizontal_density_threshold = 1500
+	horizontal_density_threshold = width/2
 	# Pixel density threshold for cropping vertical lines
 	# TODO:: Replace by dynamic implementation
-	vertical_density_threshold = 100 
+	vertical_density_threshold = height/2 
 
 
 	# In order, read, binarize, rotate, crop, seperate, split, show and write the image.
-	img = cv2.imread('example.pgm',0)
-	img = binarize(img)
-	img = houghRotation(img,rho=1,theta=np.pi/180,threshold=400,minLineLength=500,maxLineGap=20)
+
+	img = houghRotation(img,rho=1,theta=np.pi/180,threshold=height+1,minLineLength=height+1,maxLineGap=20)
 
 	h_pixel_density = calcHorPixelDensity(img)
 	v_pixel_density = calcVerPixelDensity(img)
 
-	drawDensities(h_pixel_density, v_pixel_density)
+	#drawDensities(h_pixel_density, v_pixel_density)
 	
 	img = cropImage(img,horizontal_density_threshold,vertical_density_threshold, h_pixel_density, v_pixel_density)
 	
+	#cv2.imshow('image',img)
+	#cv2.waitKey(0)
+	#cv2.destroyAllWindows()
+
 	h_pixel_density = calcHorPixelDensity(img)
 	v_pixel_density = calcVerPixelDensity(img)
 	
 	seperators = CalcSeperators(v_pixel_density, minBoxWidth, threshold,padding)
 
-	drawDensities(h_pixel_density, v_pixel_density)
+	#drawDensities(h_pixel_density, v_pixel_density)
 
 	#drawSeperators(img, seperators, padding)
 
 	images = splitImage(img, seperators)
+
+	#showImages(images)
+
 
 	square_images = []
 	for image in images:
