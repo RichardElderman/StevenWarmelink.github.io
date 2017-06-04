@@ -26,7 +26,7 @@ def readLabelledData(maxFiles):
       labelled_data.append((utf,img, output))
     if len(labelled_data)==maxFiles:
       break;
-  return labelled_data, numlbl
+  return labelled_data, lbls
 
 # generate target output for an image, array of zeros with 1 at correct class
 def getDesiredOutput(length, onepos):
@@ -42,10 +42,10 @@ def nonlin(x, deriv=False):
     return 1 / (1 + np.exp(-x))
 
 def reLuMatrix(x, deriv = False):
-	# set every negative value in x to zero
+  # set every negative value in x to zero
     # use softplus method to be able to find derivative, which is nonlin with deriv=true (needed for learning)
     if(deriv == True):
-        return nonlin(x, True)		
+        return nonlin(x, True)    
     return np.log(1+np.exp(x))
 
 def supersample(dat, orgX, orgY, winSize, strideSize):
@@ -113,8 +113,8 @@ mask10 = np.matrix([
                        [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1]])
 
 # read imgs to classify, and get number of classes
-labelled_data, totclasses = readLabelledData(1000)
-print("Number of classes: "+str(totclasses))
+labelled_data, allclasses = readLabelledData(1000)
+print("Number of classes: "+str(len(allclasses)))
 # shuffle images, such that classes are more evenly distributed across data set
 shuffle(labelled_data)
 
@@ -131,7 +131,7 @@ stridesize = 3
 syn0 = 2 * np.random.random((inputlayer, 80)) - 1
 
 # weights from hidden layer (4 nodes) to output layer ("number of classes" nodes)
-syn1 = 2 * np.random.random((80, totclasses)) - 1
+syn1 = 2 * np.random.random((80, len(allclasses))) - 1
 
 
 for j in range(numTrainData):
@@ -143,7 +143,7 @@ for j in range(numTrainData):
     conv =  convLayer(im, maskUsed)
     reLu = reLuMatrix(conv)
     pool, places = pooling(reLu, windowsize, stridesize)
-    print(places)
+    #print(places)
     l0 = pool.reshape(1,sum(len(x) for x in pool))
     l1 = nonlin(np.dot(l0, syn0))
     l2 = nonlin(np.dot(l1, syn1))
@@ -166,11 +166,23 @@ for j in range(numTrainData):
     
     # get error of pool layer
     pool_error = l1_delta.dot(syn0.T)
-    only_maxes = np.multiply(reLu*places) # replace all irrelevant values (nonmax) with zero
-    
+
+    only_maxes = np.multiply(reLu,places) # replace all irrelevant values (nonmax) with zero
+    only_maxes_vec = only_maxes.reshape(1,sum(len(x) for x in only_maxes))
+    # max_indices = only_maxes_vec[np.where( only_maxes_vec==1)]
+    # merge_maxes = np.array((max_indices, pool_error)).T
+
+    # reconstruct input matrix of pool layer, with errors at max places
+    pool_error_fullmat = np.zeros(shape=(1,len(only_maxes_vec)))
+    error_indx = 0
+    for indx in range(len(only_maxes_vec)):
+      if only_maxes_vec[0, indx]==1:
+        pool_error_fullmat[0, indx] = pool_error[0, error_indx]
+        error_indx +=1
+
     # pool does not contribute on error: pass on to ReLu layer
     
-    relu_delta = pool_error * nonlin(only_maxes, deriv=True)
+    relu_delta = pool_error_fullmat * nonlin(only_maxes_vec, deriv=True)
     
     #conv_error = relu_delta.dot(
     
@@ -187,7 +199,7 @@ for j in range(numTrainData,numTestData+numTrainData):
   y = x[2]
   conv =  convLayer(im, maskUsed)
   reLu = reLuMatrix(conv)
-  pool = pooling(reLu, windowsize, stridesize)
+  pool, places = pooling(reLu, windowsize, stridesize)
   l0 = pool.reshape(1,sum(len(x) for x in pool))
   l1 = nonlin(np.dot(l0, syn0))
   l2 = nonlin(np.dot(l1, syn1))
