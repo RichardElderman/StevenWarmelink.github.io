@@ -94,7 +94,7 @@ def maxPoolLayer(dat, window, stride):
 
 # Performs the actual convolution of dat and mask (assumption = dat and mask have same shape)
 def convolution(dat, mask):
-  return np.sum(np.multiply(dat, mask))
+  return np.mean(np.multiply(dat, mask))
 
 # Main function of a convolution layer: slides mask over dat, at each place 
 # doing a convolution with the part of dat under the mask.
