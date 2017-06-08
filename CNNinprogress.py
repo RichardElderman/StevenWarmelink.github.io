@@ -1,6 +1,7 @@
 from __future__ import print_function
 from random import shuffle
 import cv2
+import math
 import os
 import numpy as np
 
@@ -51,7 +52,8 @@ def reLuLayer(x, deriv = False):
   if(deriv == True):
     return nonlin(x, True)
 
-  return np.log(1+np.exp(x))
+  # return np.log(1+np.exp(x))
+  return x.clip(min=0)
 
 
 # Function used for backpropagation through a pooling layer
@@ -94,11 +96,11 @@ def maxPoolLayer(dat, window, stride):
 
 # Performs the actual convolution of dat and mask (assumption = dat and mask have same shape)
 def convolution(dat, mask):
-  return np.mean(np.multiply(dat, mask))
+  return np.mean(np.multiply(dat, np.flipud(mask)))
 
 # Main function of a convolution layer: slides mask over dat, at each place 
-# doing a convolution with the part of dat under the mask.
-def convLayer(dat, mask):
+# doing a convolution with the part of dat under the mask. ("same" conv)
+def convLayerSame(dat, mask):
   nrow, ncol = np.shape(dat)
   rMask, cMask = np.shape(mask)
   out = np.zeros(shape=(nrow, ncol))
@@ -109,6 +111,33 @@ def convLayer(dat, mask):
       out[r,c] = convolution(sub, mask)
 
   return out
+  
+# Main function of a convolution layer: slides mask over dat, at each place 
+# doing a convolution with the part of dat under the mask. ("valid" conv)
+def convLayerValid(dat, mask):
+  nrow, ncol = np.shape(dat)
+  rMask, cMask = np.shape(mask)
+  convRow = nrow - (rMask-1)
+  convCol = ncol - (cMask-1)
+  out = np.zeros(shape=(convRow, convCol))
+  for r in range(0,convRow):
+    for c in range(0,convCol):
+      sub = np.zeros(shape=(rMask, cMask)) 
+      sub = dat[r:r+rMask, c:c+cMask]
+      out[r,c] = convolution(sub, mask)
+
+  return out
+  
+# Main function of a convolution layer: slides mask over dat, at each place 
+# doing a convolution with the part of dat under the mask. ("full" conv)
+def convLayerFull(dat, mask):
+  nrow, ncol = np.shape(dat)
+  rMask, cMask = np.shape(mask)
+  convRow = nrow + (rMask-1)*2
+  convCol = ncol + (cMask-1)*2
+  padded = np.zeros(shape=(convRow, convCol))
+  padded[rMask-1:convRow - (rMask-1), cMask-1:convCol - (cMask-1)] = dat
+  return convLayerValid(padded, mask)
 
 # Height and width of an input image
 imgWidth = imgHeight = 128
@@ -124,6 +153,10 @@ mask3 = np.random.random((3, 3)) - 1
 mask3 = np.matrix([[1,-1,-1],
            [-1,1,-1],
            [-1,-1,1]])
+           
+maskFlip = np.matrix([[0,1,2],
+           [3,4,5],
+           [6,7,8]])
 mask10 = np.matrix([
                        [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
                        [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
@@ -135,7 +168,6 @@ mask10 = np.matrix([
                        [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
                        [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
                        [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1]])
-print(convLayer(mask10, mask3))
 # read 1000 images from data set, and get list of all classes (utf codes)
 labelled_data, allclasses = readLabelledData(1000)
 print("Number of classes: "+str(len(allclasses)))
@@ -143,7 +175,7 @@ print("Number of classes: "+str(len(allclasses)))
 shuffle(labelled_data)
 
 # list of parameters
-inputlayer = 1849  # number of input nodes for fully connected part (TODO make dynamic using window size and img size)
+inputlayer = 1936  # number of input nodes for fully connected part (TODO make dynamic using window size and img size)
 numTestData = 100  # number of images to test on
 numTrainData = 500 # number of images to train on
 maskUsed = mask3   # mask that is used in the convolution
@@ -153,9 +185,13 @@ stridesize = 3     # stride size of the pooling layer in the CNN
 # randomly initialize our weights with mean 0
 # weights from input layer ("output of conv. layer" nodes) to hidden layer (4 nodes) fully connected
 syn0 = 2 * np.random.random((inputlayer, 80)) - 1
+# biases
+syn0_B = 2 * np.random.random((1, 80)) - 1
 
 # weights from hidden layer (4 nodes) to output layer ("number of classes" nodes)
 syn1 = 2 * np.random.random((80, len(allclasses))) - 1
+# biases
+syn1_B = 2 * np.random.random((1, len(allclasses))) - 1
 
 
 for j in range(numTrainData):
@@ -164,13 +200,14 @@ for j in range(numTrainData):
     im = x[1] # input data (image) 
     y = x[2]  # desired (target) output
 
-    conv = convLayer(im, maskUsed)
+    conv = convLayerFull(im, maskUsed)
     reLu = reLuLayer(conv)
     pool, places = maxPoolLayer(reLu, windowsize, stridesize)
     #print(places)
     l0 = pool.reshape(1,sum(len(x) for x in pool))
-    l1 = nonlin(np.dot(l0, syn0))
-    l2 = nonlin(np.dot(l1, syn1))
+    # print(np.shape(l0)) #TODO use result to make "inputLayer" var dynamic
+    l1 = nonlin(np.dot(l0, syn0) + syn0_B)
+    l2 = nonlin(np.dot(l1, syn1) + syn1_B)
 
     l2_error = y - l2
 
@@ -197,11 +234,16 @@ for j in range(numTrainData):
     # pool does not contribute on error: pass on to ReLu layer
     relu_delta = pool_input_errorvec * reLuLayer(pool_input_vec, deriv=True)
     
-    # conv_error = relu_delta.dot(....
+    # no need for dot product: connections 1-1 instead of fully connected
+    # reshape to original format
+    sqrt_size = math.sqrt(relu_delta.size)
+    conv_error = relu_delta.reshape(sqrt_size, sqrt_size)
     # conv_delta = ...
 
     syn1 += l1.T.dot(l2_delta)
+    syn1_B += l2_delta
     syn0 += l0.T.dot(l1_delta)
+    syn0_B += l1_delta
     # usedMask += ....
 
 totCorrect = 0
@@ -211,7 +253,7 @@ for j in range(numTrainData,numTestData+numTrainData):
   tot = tot + 1
   im = x[1]
   y = x[2]
-  conv =  convLayer(im, maskUsed)
+  conv =  convLayerFull(im, maskUsed)
   reLu = reLuLayer(conv)
   pool, places = maxPoolLayer(reLu, windowsize, stridesize)
   l0 = pool.reshape(1,sum(len(x) for x in pool))
