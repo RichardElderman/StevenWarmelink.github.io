@@ -192,7 +192,6 @@ def calcVerticalRuns(img):
 		runs = 0
 		for j in range(1,height):
 			if img[j][i-1] != img[j][i]:
-				print img[j][i-1], img[j][i]
 				runs += 1
 		vertical_runs.append(runs)
 
@@ -360,9 +359,13 @@ def splitImage(img, seperators):
 # Function which shows all images in list
 def showImages(images):
 	for img in images:
-		cv2.imshow('image',img)
-		cv2.waitKey(0)
-		cv2.destroyAllWindows()
+		height, width = img.shape
+		if (height > 1 and width > 1):
+			cv2.imshow('image',img)
+			cv2.waitKey(0)
+			cv2.destroyAllWindows()
+		else:
+			print "ERROR: ", height, width
 
 # Function which saves all images in list as jpg file in current folder
 def writeImages(images, readstr):
@@ -423,6 +426,7 @@ def cropSquare(image):
 	height, width = cropped_image.shape
 	if(height == 0 or width == 0):
 		print "IMAGE NONEXISTANT (dimensions 0x0)"
+		return None
 	else:
 		cropped_image = cv2.resize(cropped_image, (128, 128))
 	
@@ -432,7 +436,9 @@ def cropSquare(image):
 def loopthroughimages(readStr): 
 
 	inputImg = cv2.imread(readStr,0)
+	calcVerticalRuns(inputImg)
 	img = binarize(inputImg)
+	calcVerticalRuns(img)
 	height, width = img.shape
 
 	# Minimum distance between two seperators
@@ -443,10 +449,10 @@ def loopthroughimages(readStr):
 	padding = 5
 	# Pixel density threshold for cropping horizontal lines
 	# TODO:: Replace by dynamic implementation  
-	horizontal_density_threshold = width/2
+	horizontal_density_threshold = width/20
 	# Pixel density threshold for cropping vertical lines
 	# TODO:: Replace by dynamic implementation
-	vertical_density_threshold = height/2 
+	vertical_density_threshold = height/20 
 
 
 	# In order, read, binarize, rotate, crop, seperate, split, show and write the image.
@@ -458,6 +464,8 @@ def loopthroughimages(readStr):
 	#drawDensities(h_pixel_density, v_pixel_density)
 
 	img = houghRotation(img,rho=1,theta=np.pi/180,threshold=height+1,minLineLength=height+1,maxLineGap=20)
+
+	img = binarize(img)
 
 	h_pixel_density = calcHorPixelDensity(img)
 	v_pixel_density = calcVerPixelDensity(img)
@@ -480,7 +488,7 @@ def loopthroughimages(readStr):
 	h_runs = calcHorizontalRuns(img)
 	v_runs = calcVerticalRuns(img)
 
-	drawDensities(h_runs, v_runs)
+	#drawDensities(h_runs, v_runs)
 
 	#drawSeperators(img, seperators, padding)
 
@@ -491,19 +499,21 @@ def loopthroughimages(readStr):
 
 	square_images = []
 	for image in images:
-		square_images.append(cropSquare(image))
+		tempImg = cropSquare(image)
+		if tempImg is not None:
+			square_images.append(tempImg)
 
-	#showImages(square_images)
+	showImages(square_images)
 
 	writeImages(square_images, readStr)
 
 
 if __name__ == "__main__":
 	
-	for filename in os.listdir("."):
-		if filename.endswith(".pgm"):
-			print filename
-			loopthroughimages(filename)
+	for i, filename in enumerate(os.listdir(".")):
+			if filename.endswith(".pgm"):
+				print filename, i
+				loopthroughimages(filename)
 
 
 	
