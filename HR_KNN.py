@@ -1,5 +1,6 @@
 import cv2
 import os
+import math
 import pixelDensity
 from random import shuffle
 import numpy as np
@@ -64,65 +65,72 @@ def mostCommonClass(top_k_matches):
 		final_class = max_class
 	return final_class
 
-#The K Nearest Neightbour algorithm
-def KNN():
-	k = 3
-	print('running KNN with K=' + repr(k))
 
+
+def xfoldKNN(x, k, labelled_data):
+	print('Starting '+repr(x) +'-fold cross validation on KNN')
+	total_acc = 0
+	#The size of each fold
+	fold_size = math.floor(len(labelled_data)/x)
+
+	#x fold cross validation
+	for x in range(0, x):
+		test_data = labelled_data[x*fold_size:x*fold_size+fold_size]
+		train_data = labelled_data[0:x*fold_size] + labelled_data[x*fold_size+fold_size:]
+		accuracy = KNN(k, train_data, test_data)
+		print('in round ' + repr(x) + ' ' + repr(round(accuracy,2)) + '% was correct')
+		total_acc += accuracy
+	print('in total ' + repr(round((total_acc/x),2)) + ' % was correct')
+
+
+
+#The K Nearest Neightbour algorithm
+def KNN(k, labelled_data, test_data):
+	print('running KNN with K=' + repr(k))
+	#A list to store the new images with a label
+	final_list = []
+	#Number of correct 
+	correct = 0
+	
+	#For each new image in the test set
+	for i, (new_utf,new_image) in enumerate(test_data):
+		print((i/len(test_data)*100),  end="\r")
+		distance_list = []
+		#Calculate the distance between the new image and all of the labelled images
+		for (labelled_utf, labelled_image) in labelled_data:
+			distance_list.append((labelled_utf, calcHammingDistance(new_image, labelled_image)))
+		#Sort the list of distances (lowest distance first)
+		distance_list = sorted(distance_list,key=lambda x: x[1], reverse=False)
+		top_k_matches = distance_list[:k]
+		#Find the most common class in the top k labels from the distance list
+		final_class = mostCommonClass(top_k_matches)
+		if(new_utf == final_class):
+			correct = correct + 1
+
+		#Find a labelled image with the same utf code as the 'final class'
+		#Store both the new image and the labelled image in the final list
+		for (labelled_utf, labelled_image) in train_data:
+			if(labelled_utf == final_class):
+				final_list.append((new_image, labelled_image))
+				break
+
+	return (correct/len(test_data)*100)
+
+if __name__ == "__main__":
+	#K value for KNN
+	k = 3
 	#The training data (with labels)
 	labelled_data = readLabelledData()
 	#The extra labelled data from the fonts
-	font_data = readFontData()
+	#font_data = readFontData()
 	#The new test data
 	test_data = readData()
-	#A list to store the new images with a label
-	final_list = []
+
+	#You can add the font data to the train data:
+	#train_data = labelled_data + font_data
+	train_data = labelled_data
 
 	total_correct = 0
-	shuffle(labelled_data)
-	
-	print('Starting KNN:')
-	#16 fold cross validation
-	for x in range(0, 16):
-		test_data = labelled_data[x*1000:x*1000+1000]
-		train_data = labelled_data[0:x*1000] + labelled_data[x*1000+1000:]
-		correct = 0
-
-		#You can add the font data to the train data:
-		train_data = train_data + font_data
-
-
-		#For each new image in the test set
-		for i, (new_utf,new_image) in enumerate(test_data):
-			print(i/len(test_data),  end="\r")
-			distance_list = []
-			#Calculate the distance between the new image and all of the labelled images
-			for (labelled_utf, labelled_image) in train_data:
-				distance_list.append((labelled_utf, calcHammingDistance(new_image, labelled_image)))
-			#Sort the list of distances (lowest distance first)
-			distance_list = sorted(distance_list,key=lambda x: x[1], reverse=False)
-			top_k_matches = distance_list[:k]
-			#Find the most common class in the top k labels from the distance list
-			final_class = mostCommonClass(top_k_matches)
-			if(new_utf == final_class):
-				correct = correct + 1
-
-			#Find a labelled image with the same utf code as the 'final class'
-			#Store both the new image and the labelled image in the final list
-			#for (labelled_utf, labelled_image) in train_data:
-			#	if(labelled_utf == final_class):
-			#		final_list.append((new_image, labelled_image))
-			#		break
-
-			#Show each new image with a matched image to validate it
-			#for (new_image, labelled_image) in final_list:
-			#	cv2.imshow("new image", new_image)
-			#	cv2.imshow("labelled", labelled_image)
-			#	cv2.waitKey(0)
-
-		print('in round ' + repr(x) + ' ' + repr(correct/10) + '% was correct')
-		total_correct += correct
-		
-	print('in total ' + repr((total_correct/16)/10) + ' % was correct')
-
-KNN()
+	shuffle(train_data)
+	#KNN(k, train_data, test_data)
+	xfoldKNN(10, k, train_data)
