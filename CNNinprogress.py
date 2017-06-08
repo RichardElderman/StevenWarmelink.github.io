@@ -173,9 +173,8 @@ labelled_data, allclasses = readLabelledData(1000)
 print("Number of classes: "+str(len(allclasses)))
 # shuffle images, such that classes are more evenly distributed across data set
 shuffle(labelled_data)
-
 # list of parameters
-inputlayer = 1936  # number of input nodes for fully connected part (TODO make dynamic using window size and img size)
+inputlayer = 1764  # number of input nodes for fully connected part (TODO make dynamic using window size and img size)
 numTestData = 100  # number of images to test on
 numTrainData = 500 # number of images to train on
 maskUsed = mask3   # mask that is used in the convolution
@@ -200,12 +199,12 @@ for j in range(numTrainData):
     im = x[1] # input data (image) 
     y = x[2]  # desired (target) output
 
-    conv = convLayerFull(im, maskUsed)
+    conv = convLayerValid(im, maskUsed)
     reLu = reLuLayer(conv)
     pool, places = maxPoolLayer(reLu, windowsize, stridesize)
     #print(places)
     l0 = pool.reshape(1,sum(len(x) for x in pool))
-    # print(np.shape(l0)) #TODO use result to make "inputLayer" var dynamic
+    print(np.shape(l0)) #TODO use result to make "inputLayer" var dynamic
     l1 = nonlin(np.dot(l0, syn0) + syn0_B)
     l2 = nonlin(np.dot(l1, syn1) + syn1_B)
 
@@ -253,7 +252,7 @@ for j in range(numTrainData,numTestData+numTrainData):
   tot = tot + 1
   im = x[1]
   y = x[2]
-  conv =  convLayerFull(im, maskUsed)
+  conv =  convLayerValid(im, maskUsed)
   reLu = reLuLayer(conv)
   pool, places = maxPoolLayer(reLu, windowsize, stridesize)
   l0 = pool.reshape(1,sum(len(x) for x in pool))
