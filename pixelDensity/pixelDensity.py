@@ -175,7 +175,7 @@ def calcHorPixelDensity(img):
 
 	# Walk across the image and calculate pixel densities by summing up black pixels
 	for j in range(1,height):
-		sum = 0;
+		sum = 0
 		for i in range (1,width):
 			px = img[j,i]
 			if px == 0:
@@ -184,6 +184,32 @@ def calcHorPixelDensity(img):
 
 	return horizontal_pixel_density
 
+def calcVerticalRuns(img):
+	vertical_runs = []
+	height, width = img.shape
+
+	for i in range (1,width):
+		runs = 0
+		for j in range(1,height):
+			if img[j][i-1] != img[j][i]:
+				print img[j][i-1], img[j][i]
+				runs += 1
+		vertical_runs.append(runs)
+
+	return vertical_runs
+
+def calcHorizontalRuns(img):
+	horizontal_runs = []
+	height, width = img.shape
+
+	for i in range (1,height):
+		runs = 0
+		for j in range(1,width):
+			if img[i][j-1] != img[i][j]:
+				runs += 1
+		horizontal_runs.append(runs)
+
+	return horizontal_runs
 
 # Function which, given a list of vertical pixel densities, calculates seperator 
 # locations based on a minimum box width (characters can not follow eachother within 
@@ -405,8 +431,8 @@ def cropSquare(image):
 
 def loopthroughimages(readStr): 
 
-	img = cv2.imread(readStr,0)
-	img = binarize(img)
+	inputImg = cv2.imread(readStr,0)
+	img = binarize(inputImg)
 	height, width = img.shape
 
 	# Minimum distance between two seperators
@@ -424,6 +450,12 @@ def loopthroughimages(readStr):
 
 
 	# In order, read, binarize, rotate, crop, seperate, split, show and write the image.
+
+	h_pixel_density = calcHorPixelDensity(img)
+	v_pixel_density = calcVerPixelDensity(img)
+
+
+	#drawDensities(h_pixel_density, v_pixel_density)
 
 	img = houghRotation(img,rho=1,theta=np.pi/180,threshold=height+1,minLineLength=height+1,maxLineGap=20)
 
@@ -444,6 +476,11 @@ def loopthroughimages(readStr):
 	seperators = CalcSeperators(v_pixel_density, minBoxWidth, threshold,padding)
 
 	#drawDensities(h_pixel_density, v_pixel_density)
+
+	h_runs = calcHorizontalRuns(img)
+	v_runs = calcVerticalRuns(img)
+
+	drawDensities(h_runs, v_runs)
 
 	#drawSeperators(img, seperators, padding)
 
