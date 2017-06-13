@@ -1,11 +1,3 @@
-"""Predict a handwritten integer (MNIST expert).
-Script requires
-1) saved model (model2.ckpt file) in the same location as the script is run from.
-(requried a model created in the MNIST expert tutorial)
-2) one argument (png file location of a handwritten integer)
-Documentation at:
-http://niektemme.com/ @@to do
-"""
 
 # import modules
 import sys
