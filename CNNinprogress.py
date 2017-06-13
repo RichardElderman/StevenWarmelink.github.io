@@ -5,6 +5,16 @@ import math
 import os
 import numpy as np
 
+def binarize(img):
+  # Performs gaussian blurring with a kernel size of (5,5)
+  blur = cv2.GaussianBlur(img,(5,5),0)
+  # Performs Otsu thresholding (binarization) on the blurred image
+  ret3,otsu = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+  # switch black/white index (such that white=0), and set black to 1 instead of 256
+  otsu[otsu==0] = 1
+  otsu[otsu==255] = 0
+  return otsu
+
 #Reads all of the labelled images, and determined all different classes
 def readLabelledData(maxFiles):
   lbls = []
@@ -22,9 +32,12 @@ def readLabelledData(maxFiles):
     print(i,  end="\r")
     if file.endswith('.pgm'):
       img = cv2.imread('Labelled/' + file, 0)
+      bin_img = binarize(img) # for now binarize image here (must already be done, but not)
+      #print(np.unique(bin_img))
       utf = file[:4]
       output = getDesiredOutput(numlbl, lbls.index(utf))
-      labelled_data.append((utf,img, output))
+      # labelled_data.append((utf,img, output))
+      labelled_data.append((utf,bin_img, output))
     if len(labelled_data)==maxFiles:
       break;
   return labelled_data, lbls
@@ -96,7 +109,8 @@ def maxPoolLayer(dat, window, stride):
 
 # Performs the actual convolution of dat and mask (assumption = dat and mask have same shape)
 def convolution(dat, mask):
-  return np.mean(np.multiply(dat, np.flipud(mask)))
+  return np.sum(np.multiply(dat, np.flipud(mask))) 
+  # return np.mean(np.multiply(dat, np.flipud(mask)))
 
 # Main function of a convolution layer: slides mask over dat, at each place 
 # doing a convolution with the part of dat under the mask. ("same" conv)
@@ -150,7 +164,7 @@ mask = np.random.random((2, 2)) - 1
 mask3 = np.random.random((3, 3)) - 1
 
 # Masks with predetermined values:
-mask3 = np.matrix([[1,-1,-1],
+maskline = np.matrix([[1,-1,-1],
            [-1,1,-1],
            [-1,-1,1]])
            
@@ -173,11 +187,12 @@ labelled_data, allclasses = readLabelledData(1000)
 print("Number of classes: "+str(len(allclasses)))
 # shuffle images, such that classes are more evenly distributed across data set
 shuffle(labelled_data)
+
 # list of parameters
-inputlayer = 1764  # number of input nodes for fully connected part (TODO make dynamic using window size and img size)
+inputlayer = 1600  # number of input nodes for fully connected part (TODO make dynamic using window size and img size)
 numTestData = 100  # number of images to test on
-numTrainData = 500 # number of images to train on
-maskUsed = mask3   # mask that is used in the convolution
+numTrainData = 300 # number of images to train on
+maskUsed = mask10   # mask that is used in the convolution
 windowsize = 3     # window size of the pooling layer in the CNN
 stridesize = 3     # stride size of the pooling layer in the CNN
 
@@ -204,14 +219,15 @@ for j in range(numTrainData):
     pool, places = maxPoolLayer(reLu, windowsize, stridesize)
     #print(places)
     l0 = pool.reshape(1,sum(len(x) for x in pool))
-    print(np.shape(l0)) #TODO use result to make "inputLayer" var dynamic
+    #print(np.shape(l0)) #TODO use result to make "inputLayer" var dynamic
     l1 = nonlin(np.dot(l0, syn0) + syn0_B)
     l2 = nonlin(np.dot(l1, syn1) + syn1_B)
 
     l2_error = y - l2
 
     if (j % 1) == 0:
-      print ("Error " + str(j) + " :" + str(np.mean(np.abs(l2_error))) + ", certainty: "+str(np.max(l2)) + ", correct: "+ str(np.argmax(l2)==np.argmax(y)))
+      tar_class = np.where(y==1)[1]
+      print (str(tar_class) + " Error " + str(j) + " :" + str(np.mean(np.abs(l2_error))) + ", certainty: "+str(np.max(l2)) + ", correct: "+ str(np.argmax(l2)==np.argmax(y)))
 
     # in what direction is the target value?
     # were we really sure? if so, don't change too much.
@@ -235,7 +251,8 @@ for j in range(numTrainData):
     
     # no need for dot product: connections 1-1 instead of fully connected
     # reshape to original format
-    sqrt_size = math.sqrt(relu_delta.size)
+    sqrt_size = int(math.sqrt(relu_delta.size))
+    # print(sqrt_size)
     conv_error = relu_delta.reshape(sqrt_size, sqrt_size)
     # conv_delta = ...
 
