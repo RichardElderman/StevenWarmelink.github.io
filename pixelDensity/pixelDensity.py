@@ -103,20 +103,40 @@ def rotateImage(img):
 def cropImage(img, h_thresh, v_thresh, h_dens, v_dens):
 	height, width = img.shape
 
+	v_max = max(v_dens)
+	h_max = max(h_dens)
+
+	print "v, h", v_max, h_max
+
+
 	vborders = []
 	hborders = []
 
 	subimg = img
 
 	# Add all locations where the vertical density is above the threshold to a list
-	for i in range (0, width-1):
-		if v_dens[i] > v_thresh:
+	#for i in range (0, width-1):
+	#	if v_dens[i] > v_thresh:
+	#		vborders.append(i)
+	v_thresh = int(v_max/10)
+	h_thresh = int(h_max/10)
+
+	for i in range(0,width - 2):
+		if (((v_dens[i+1] > v_thresh) and (v_dens[i] < v_thresh)) or ((v_dens[i+1] < v_thresh) and (v_dens[i] > v_thresh))):
 			vborders.append(i)
+
+	print vborders  
 	
-	# Add all locations where the horizontal density is above the threshold to a list
-	for j in range (0, height-1):
-		if h_dens[j] > h_thresh:
+	for j in range(0,height - 2):
+		if (((h_dens[j+1] > h_thresh) and (h_dens[j] < h_thresh)) or ((h_dens[j+1] < h_thresh) and (h_dens[j] > h_thresh))):
 			hborders.append(j)
+
+	print hborders 
+
+	# Add all locations where the horizontal density is above the threshold to a list
+	#for j in range (0, height-1):
+	#	if h_dens[j] > h_thresh:
+	#		hborders.append(j)
 
 	# If horizontal/vertical lines have been detected, check whether there are lines which are 
 	# more than 100 pixels apart. If there are, we have more than one line 
@@ -425,7 +445,7 @@ def cropSquare(image):
 	#Resize the image to 128x128 pixels
 	height, width = cropped_image.shape
 	if(height == 0 or width == 0):
-		print "IMAGE NONEXISTANT (dimensions 0x0)"
+		print "IMAGE NONEXISTENT (dimensions 0x0)"
 		return None
 	else:
 		cropped_image = cv2.resize(cropped_image, (128, 128))
@@ -449,10 +469,10 @@ def loopthroughimages(readStr):
 	padding = 5
 	# Pixel density threshold for cropping horizontal lines
 	# TODO:: Replace by dynamic implementation  
-	horizontal_density_threshold = width/20
+	horizontal_density_threshold = width/10
 	# Pixel density threshold for cropping vertical lines
 	# TODO:: Replace by dynamic implementation
-	vertical_density_threshold = height/20 
+	vertical_density_threshold = height/10 
 
 
 	# In order, read, binarize, rotate, crop, seperate, split, show and write the image.
@@ -470,7 +490,7 @@ def loopthroughimages(readStr):
 	h_pixel_density = calcHorPixelDensity(img)
 	v_pixel_density = calcVerPixelDensity(img)
 
-	#drawDensities(h_pixel_density, v_pixel_density)
+	drawDensities(h_pixel_density, v_pixel_density)
 	
 	img = cropImage(img,horizontal_density_threshold,vertical_density_threshold, h_pixel_density, v_pixel_density)
 	
@@ -483,14 +503,14 @@ def loopthroughimages(readStr):
 	
 	seperators = CalcSeperators(v_pixel_density, minBoxWidth, threshold,padding)
 
-	#drawDensities(h_pixel_density, v_pixel_density)
+	drawDensities(h_pixel_density, v_pixel_density)
 
 	h_runs = calcHorizontalRuns(img)
 	v_runs = calcVerticalRuns(img)
 
 	#drawDensities(h_runs, v_runs)
-
-	#drawSeperators(img, seperators, padding)
+	draw_img = img 
+	drawSeperators(draw_img, seperators, padding)
 
 	images = splitImage(img, seperators)
 
@@ -503,7 +523,7 @@ def loopthroughimages(readStr):
 		if tempImg is not None:
 			square_images.append(tempImg)
 
-	showImages(square_images)
+	#showImages(square_images)
 
 	writeImages(square_images, readStr)
 
@@ -511,7 +531,7 @@ def loopthroughimages(readStr):
 if __name__ == "__main__":
 	
 	for i, filename in enumerate(os.listdir(".")):
-			if filename.endswith(".pgm"):
+			if filename.endswith("10.pgm"):
 				print filename, i
 				loopthroughimages(filename)
 
