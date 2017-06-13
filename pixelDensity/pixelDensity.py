@@ -95,6 +95,101 @@ def rotateImage(img):
 	return np.asarray(resultImage)
 
 
+def removeHorizontalLines(img, h_thresh, v_thresh, h_dens, v_dens):
+	height, width = img.shape
+
+	padding = 10
+
+	#print "Image height: ", height
+	#print "Image width:  ", width
+	#print "Max Vdens:    ", max(v_dens)
+	#print "Max Hdens:    ", max(h_dens)
+	#print "Vthresh:      ", v_thresh
+	#print "Hthresh:      ", h_thresh
+
+
+	h_lines = []
+	v_lines = []
+	# Detect whether there are horizontal lines, and where they are
+	for i in range(0,height-1):
+		if h_dens[i] > h_thresh:
+			h_lines.append(i)
+
+	#print "hlines: ", h_lines
+
+	for i in range(0,width-1):
+		if v_dens[i] > v_thresh:
+			v_lines.append(i)
+
+	#print "Vlines: ", v_lines
+
+	# for i in range(h_lines[0]-10,h_lines[len(h_lines)-1]):
+	# 	for j in range(1,width):
+	# 		img[i,j] = 255
+
+	# if (len(v_lines) > 0):
+	# 	for i in range(v_lines[0]-10,v_lines[len(v_lines)-1]):
+	# 		for j in range(1,height):
+	# 			img[j,i] = 255			
+
+
+	[x0, x1] = seqList(h_lines)
+	[y0, y1] = seqList(v_lines)
+
+	# print h_lines
+	#showImages([img])
+
+	subimg = img[x0-padding:x1+padding,0:width-1]
+
+	# cv2.imshow("img",subimg)
+	# cv2.waitKey(0)
+	# cv2.destroyAllWindows()
+
+	#showImages([subimg])
+
+	#h_pixel_density = calcHorPixelDensity(subimg)
+	#v_pixel_density = calcVerPixelDensity(subimg)
+	#drawDensities(h_pixel_density,v_pixel_density)
+
+	return subimg
+
+
+
+
+def seqList(vh_list):
+	max_index = 0
+	max_len = 0
+	newSequence = True
+
+	temp_index = 0
+	tempmax = 0
+
+	for i in range (1,len(vh_list)):
+		if (vh_list[i] == vh_list[i-1] + 1):
+			if newSequence:
+				temp_index = i
+				newSequence = False 
+		else: 
+			if newSequence == False:
+				newSequence = True
+				tempmax = i - temp_index
+				if tempmax > max_len:
+					max_len = tempmax
+					max_index = temp_index
+		if i == len(vh_list)-1: 
+			tempmax = i - temp_index
+			if tempmax > max_len:
+				max_len = tempmax
+				max_index = temp_index
+
+	# print "max_index:", max_index
+	# print "max_len:  ", max_len
+	# print "x1: ", vh_list[max_index-1]
+	# print "x2: ", vh_list[(max_index-1)+(max_len)]
+
+	return [vh_list[max_index-1], vh_list[(max_index-1)+(max_len)]]
+
+
 # Function which attempts to detect horizontal and vertical lines and crops out the area 
 # which contains the characters but not the horizontal/vertical lines. 
 # TODO:: Improve function to take density curves into account when determining 
@@ -106,10 +201,11 @@ def cropImage(img, h_thresh, v_thresh, h_dens, v_dens):
 	v_max = max(v_dens)
 	h_max = max(h_dens)
 
-	print "v, h", v_max, h_max
+	#print "v, h", v_max, h_max
 
+	img = removeHorizontalLines(img, h_thresh,v_thresh,h_dens,v_dens)
 
-	vborders = []
+	"""vborders = []
 	hborders = []
 
 	subimg = img
@@ -165,8 +261,8 @@ def cropImage(img, h_thresh, v_thresh, h_dens, v_dens):
 				subimg = subimg[0:height-1,0:min(vborders)-10]	
 			else: 
 				subimg = subimg[0:height-1,max(vborders)+10:width-1]
-
-	return np.asarray(subimg)
+"""
+	return np.asarray(img)
 
 
 
@@ -464,12 +560,12 @@ def loopthroughimages(readStr):
 	# Minimum distance between two seperators
 	minBoxWidth = 75
 	# Pixeldensity has to be below this threshold to trigger a seperator
-	threshold = 10
+	threshold = 15
 	# Pixels padded after seperator has been detected (to prevent cutoffs)
 	padding = 5
 	# Pixel density threshold for cropping horizontal lines
 	# TODO:: Replace by dynamic implementation  
-	horizontal_density_threshold = width/10
+	horizontal_density_threshold = width/20
 	# Pixel density threshold for cropping vertical lines
 	# TODO:: Replace by dynamic implementation
 	vertical_density_threshold = height/10 
@@ -490,27 +586,33 @@ def loopthroughimages(readStr):
 	h_pixel_density = calcHorPixelDensity(img)
 	v_pixel_density = calcVerPixelDensity(img)
 
-	drawDensities(h_pixel_density, v_pixel_density)
-	
-	img = cropImage(img,horizontal_density_threshold,vertical_density_threshold, h_pixel_density, v_pixel_density)
-	
+	#drawDensities(h_pixel_density, v_pixel_density)
+
 	#cv2.imshow('image',img)
 	#cv2.waitKey(0)
 	#cv2.destroyAllWindows()
 
+	drawDensities(h_pixel_density, v_pixel_density)
+	
+	img = cropImage(img,horizontal_density_threshold,vertical_density_threshold, h_pixel_density, v_pixel_density)
+	
+	# cv2.imshow('image',img)
+	# cv2.waitKey(0)
+	# cv2.destroyAllWindows()
+
 	h_pixel_density = calcHorPixelDensity(img)
 	v_pixel_density = calcVerPixelDensity(img)
 	
+	drawDensities(h_runs, v_runs)
+	
 	seperators = CalcSeperators(v_pixel_density, minBoxWidth, threshold,padding)
 
-	drawDensities(h_pixel_density, v_pixel_density)
 
 	h_runs = calcHorizontalRuns(img)
 	v_runs = calcVerticalRuns(img)
 
-	#drawDensities(h_runs, v_runs)
 	draw_img = img 
-	drawSeperators(draw_img, seperators, padding)
+	#drawSeperators(draw_img, seperators, padding)
 
 	images = splitImage(img, seperators)
 
@@ -531,7 +633,7 @@ def loopthroughimages(readStr):
 if __name__ == "__main__":
 	
 	for i, filename in enumerate(os.listdir(".")):
-			if filename.endswith("10.pgm"):
+			if filename.endswith("5.pgm"):
 				print filename, i
 				loopthroughimages(filename)
 
