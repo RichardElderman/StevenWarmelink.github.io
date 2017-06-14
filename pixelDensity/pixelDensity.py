@@ -1,9 +1,12 @@
 import cv2
 import numpy as np
-from matplotlib import pyplot as plt
-from matplotlib import gridspec
+#from matplotlib import pyplot as plt
+#from matplotlib import gridspec
 import math
 import os
+import sys
+
+sys.path.append('/usr/local/lib/python2.7/site-packages')
 
 # Function which binarizes the image by performing Otsu binarization after applying 
 # a guassian blur. 
@@ -363,9 +366,9 @@ def drawSeperators(img, seperators, padding):
 			if xval < width:
 				tempImg[j][xval] = 0
 
-	cv2.imshow('image',tempImg)
-	cv2.waitKey(0)
-	cv2.destroyAllWindows()
+	# cv2.imshow('image',tempImg)
+	# cv2.waitKey(0)
+	# cv2.destroyAllWindows()
 
 # Function which returns a 90 degree rotated version of the subimg region of the input image
 def createSubImage(img,subimg):
@@ -451,6 +454,22 @@ def resizeImages(images):
 	return resizedImages
 
 
+def checkForMultipleCharacters(images):
+	resultImages = []
+	for img in images:
+		height, width = img.shape
+		if height > 1.5 * width:
+			img1 = img[0:int((width/2)),0:height-1]
+			img2 = img[int(width/2):int(width-1),9:height-1]
+			resultImages.append(img1)
+			resultImages.append(img2)
+		else: 
+			resultImages.append(img)
+
+	return resultImages
+
+
+
 # Function which splits the image in parts based on seperators, removes images with too many or few pixels 
 # and resizes them to 128 x 128 pixels
 def splitImage(img, seperators):
@@ -466,6 +485,8 @@ def splitImage(img, seperators):
 
 		images.append(createSubImage(img,img[0:height-1,seperators[len(seperators)-2]:seperators[len(seperators)-1]]))	
 
+	images = checkForMultipleCharacters(images)
+
 	images = removeSubimagesOutsideRange(images)
 	
 	images = resizeImages(images)
@@ -476,12 +497,15 @@ def splitImage(img, seperators):
 def showImages(images):
 	for img in images:
 		height, width = img.shape
-		if (height > 1 and width > 1):
-			cv2.imshow('image',img)
-			cv2.waitKey(0)
-			cv2.destroyAllWindows()
-		else:
-			print "ERROR: ", height, width
+		#if (height > 1 and width > 1):
+		#cv2.startWindowThread()
+		#cv2.namedWindow("image")
+		#cv2.imshow("image",img)
+		#cv2.waitKey(0)
+		#cv2.destroyAllWindows()
+			# pass
+		#else:
+		#print("ERROR: ", repr(height), repr(width))
 
 # Function which saves all images in list as jpg file in current folder
 def writeImages(images, readstr):
@@ -541,7 +565,7 @@ def cropSquare(image):
 	#Resize the image to 128x128 pixels
 	height, width = cropped_image.shape
 	if(height == 0 or width == 0):
-		print "IMAGE NONEXISTENT (dimensions 0x0)"
+		print("IMAGE NONEXISTENT (dimensions 0x0)")
 		return None
 	else:
 		cropped_image = cv2.resize(cropped_image, (128, 128))
@@ -560,7 +584,7 @@ def loopthroughimages(readStr):
 	# Minimum distance between two seperators
 	minBoxWidth = 75
 	# Pixeldensity has to be below this threshold to trigger a seperator
-	threshold = 15
+	threshold = 12
 	# Pixels padded after seperator has been detected (to prevent cutoffs)
 	padding = 5
 	# Pixel density threshold for cropping horizontal lines
@@ -588,11 +612,11 @@ def loopthroughimages(readStr):
 
 	#drawDensities(h_pixel_density, v_pixel_density)
 
-	#cv2.imshow('image',img)
-	#cv2.waitKey(0)
-	#cv2.destroyAllWindows()
+	# cv2.imshow('image',img)
+	# cv2.waitKey(0)
+	# cv2.destroyAllWindows()
 
-	drawDensities(h_pixel_density, v_pixel_density)
+	#drawDensities(h_pixel_density, v_pixel_density)
 	
 	img = cropImage(img,horizontal_density_threshold,vertical_density_threshold, h_pixel_density, v_pixel_density)
 	
@@ -603,13 +627,15 @@ def loopthroughimages(readStr):
 	h_pixel_density = calcHorPixelDensity(img)
 	v_pixel_density = calcVerPixelDensity(img)
 	
-	drawDensities(h_runs, v_runs)
 	
 	seperators = CalcSeperators(v_pixel_density, minBoxWidth, threshold,padding)
 
 
+	print(seperators)
+
 	h_runs = calcHorizontalRuns(img)
 	v_runs = calcVerticalRuns(img)
+	#drawDensities(h_runs, v_runs)
 
 	draw_img = img 
 	#drawSeperators(draw_img, seperators, padding)
@@ -625,16 +651,16 @@ def loopthroughimages(readStr):
 		if tempImg is not None:
 			square_images.append(tempImg)
 
-	#showImages(square_images)
+	showImages(square_images)
 
-	writeImages(square_images, readStr)
+	# writeImages(square_images, readStr)
 
 
 if __name__ == "__main__":
 	
 	for i, filename in enumerate(os.listdir(".")):
-			if filename.endswith("5.pgm"):
-				print filename, i
+			if filename.endswith("example1.pgm"):
+				print(filename, repr(i))
 				loopthroughimages(filename)
 
 
