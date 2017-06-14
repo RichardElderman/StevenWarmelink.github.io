@@ -319,16 +319,16 @@ public class mainFrame extends javax.swing.JFrame {
     
     
     private void generateCode(){
-        int [][]tempDimen =readInput();
+     int [][]tempDimen =readInput();
          
         String code="featureMap = np.matrix([\n";
         for(int i=0;i<=inputHeight-1;i++){
             
             code=code+"                       [";
             for(int j=0;j<=inputWidth-2;j++){
-                code=code+tempDimen[i][j]+",";
+                code=code+tempDimen[i][j]+".,";
             }
-            code=code+tempDimen[i][inputWidth-1]+"]";
+            code=code+tempDimen[i][inputWidth-1]+".]";
             if(i !=inputHeight-1){
                 code=code+",\n";
             }
