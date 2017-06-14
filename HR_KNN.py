@@ -1,9 +1,11 @@
 import cv2
 import os
 import math
+import csv
 import pixelDensity
 from random import shuffle
 import numpy as np
+
 
 #Reads all of the new unlabelled images
 def readData():
@@ -43,22 +45,42 @@ def readFontData():
 			labelled_data.append((utf,img))
 	return labelled_data
 
+
+def importHistogram():
+	reader = csv.reader(open('histogram.csv', 'r'))
+	d = {}
+	for row in reader:
+		k, v = row
+		d[k] = v
+	return d
+
 #Calculate the Hamming distance between two images
 def calcHammingDistance(new_image, labelled_image):
 	if(new_image.shape != labelled_image.shape):
 		print('ERROR: Image dimensions must agree')
 	hamming_distance = np.count_nonzero(new_image!=labelled_image)
+	#horizontal_pixel_hamming_distance = np.count_nonzero(
+	#pixelDensity.calcHorPixelDensity(new_image)!= pixelDensity.calcHorPixelDensity(labelled_image))
+	#vertical_pixel_hamming_distance = np.count_nonzero(
+	#pixelDensity.calcVerPixelDensity(new_image)!= pixelDensity.calcVerPixelDensity(labelled_image))
+
 	return hamming_distance
 
 #Find the most commonly occuring classes in the top k matches
-def mostCommonClass(top_k_matches):
+def mostCommonClass(top_k_matches, useStatistics, histogram):
 	final_class = top_k_matches[0][0]
 	class_histogram = {}
 	for (utf, hamming_distance) in top_k_matches:
 		if utf in class_histogram:
-			class_histogram[utf] += 1
+			if(utf in histogram and useStatistics):
+				class_histogram[utf] += float(histogram[utf])
+			else:
+				class_histogram[utf] += 1
 		else:
-			class_histogram[utf] = 1
+			if(utf in histogram and useStatistics):
+				class_histogram[utf] = float(histogram[utf])
+			else:
+				class_histogram[utf] = 1
 	max_class = max(class_histogram, key=class_histogram.get)
 	#If all have a frequency of 1, take the one with the lowest hamming distance
 	if(class_histogram[max_class] > 1):
@@ -80,7 +102,7 @@ def xfoldKNN(x, k, labelled_data):
 		accuracy = KNN(k, train_data, test_data)
 		print('in round ' + repr(x) + ' ' + repr(round(accuracy,2)) + '% was correct')
 		total_acc += accuracy
-	print('in total ' + repr(round((total_acc/x),2)) + ' % was correct')
+	print('in total ' + repr(round((total_acc/(x-1)),2)) + ' % was correct')
 
 
 
@@ -91,7 +113,10 @@ def KNN(k, labelled_data, test_data):
 	final_list = []
 	#Number of correct 
 	correct = 0
-	
+
+	#this histogram reflects the distribution of each word
+	histogram = importHistogram()
+
 	#For each new image in the test set
 	for i, (new_utf,new_image) in enumerate(test_data):
 		print((i/len(test_data)*100),  end="\r")
@@ -103,7 +128,7 @@ def KNN(k, labelled_data, test_data):
 		distance_list = sorted(distance_list,key=lambda x: x[1], reverse=False)
 		top_k_matches = distance_list[:k]
 		#Find the most common class in the top k labels from the distance list
-		final_class = mostCommonClass(top_k_matches)
+		final_class = mostCommonClass(top_k_matches, True, histogram)
 		if(new_utf == final_class):
 			correct = correct + 1
 
