@@ -400,9 +400,100 @@ def cropSquare(image):
 	
 	return cropped_image
 
+def warpToCoordinates(img_height, img_y, seperator_pairs):
+	RoIs = []
+	coordinateList = []
+
+	for pair in seperator_pairs:
+		RoIs.append([pair[0],img_y,pair[1]-pair[0],img_height])
+
+	for sublist in RoIs:
+		x=sublist[0]
+		y=sublist[1]
+		width=sublist[2]
+		height=sublist[3]
+		coordinateList.append([(x,y),(x,y+height),(x+width,y+height),(x+width,y)])
+
+	return coordinateList
+
+def getmin(list):
+	min = 1000000
+	for element in list:
+		if element < min:
+			min = element
+	return min
+
+def getmax(list):
+	max = 0
+	for element in list:
+		if element > max:
+			max = element
+	return max
+
+
+def rotateCoordinates(coordinateList,img_angle, img_center,img_height,img_width):
+	# print(img_angle,img_center)
+	middle_x = img_center[0]
+	middle_y = img_center[1]
+
+	rotatedList = []
+
+	for box in coordinateList:
+		tupleList = []
+		for coordinate in box:
+			x_old = coordinate[0]
+			y_old = coordinate[1]
+			delta_x = middle_x - x_old
+			delta_y = middle_y - y_old 
+			length = np.sqrt(delta_x*delta_x + delta_y*delta_y)
+			alpha = np.rad2deg(np.arctan(delta_x / delta_y))
+
+			beta = alpha - img_angle
+
+			new_delta_x = -np.sin(np.deg2rad(beta)) * length
+			new_delta_y = -np.cos(np.deg2rad(beta)) * length
+
+			x_new = int(min(max(0,middle_x - new_delta_x),img_width))
+			y_new = int(min(max(0,middle_y - new_delta_y),img_height))
+
+			tupleList.append((x_new,y_new))
+
+		rotatedList.append(tupleList)
+
+
+	resultList = []
+	for sublist in rotatedList:
+		min_x = getmin([sublist[0][0],sublist[1][0],sublist[2][0],sublist[3][0]])
+		max_x = getmax([sublist[0][0],sublist[1][0],sublist[2][0],sublist[3][0]])
+		
+		min_y = getmin([sublist[0][1],sublist[1][1],sublist[2][1],sublist[3][1]])
+		max_y = getmax([sublist[0][1],sublist[1][1],sublist[2][1],sublist[3][1]])
+
+		width = max_x - min_x
+		height= max_y - min_y
+		x = min_x
+		y = min_y
+
+		resultList.append((x,y,width,height))
+
+	return resultList
+
+def showRoIs(rotatedList, inputImg):
+	height, width = inputImg.shape 
+	for v_pixel in range(0,width):
+		for h_pixel in range(0,height):
+			for list in rotatedList:
+				# print(repr(list))
+				if (v_pixel == list[0] or v_pixel == list[0]+list[2]) and h_pixel > list[1] and h_pixel < list[1]+list[3]:
+					inputImg[h_pixel,v_pixel] = 0
+				if (h_pixel == list[1] or h_pixel == list[1]+list[3]) and v_pixel > list[0] and v_pixel < list[0]+list[2]:
+					inputImg[h_pixel,v_pixel] = 0
+				
+	writeImages([inputImg], "0000")
+
 # Function which saves all images in list as jpg file in current folder
 def writeImages(images, readstr):
-	for i in range(0,len(images)-1):
+	for i in range(0,len(images)):
 		cv2.imwrite("images/" + readstr + "_" + str(i) + ".jpg",images[i])
 
 def loopthroughimages(readStr): 
@@ -413,6 +504,7 @@ def loopthroughimages(readStr):
 	img = binarize(inputImg)
 
 	height, width = img.shape
+	img_center = (int(width/2),int(height/2))
 	minBoxWidth = 75
 	threshold = 12
 	padding = 5
@@ -443,12 +535,11 @@ def loopthroughimages(readStr):
 
 	images, seperator_pairs = splitImage(img, seperators)
 
-	RoIs = []
+	coordinateList = warpToCoordinates(img_height,img_y,seperator_pairs)
 
-	for pair in seperator_pairs:
-		RoIs.append([pair[0],img_y,pair[1]-pair[0],img_height])
+	rotatedList = rotateCoordinates(coordinateList,img_angle,img_center,height, width)
 
-	print(repr(RoIs)) 
+	showRoIs(rotatedList, inputImg)
 
 	square_images = []
 	for image in images:
