@@ -433,8 +433,8 @@ def loopthroughimages(readStr):
 	img_height = cropRegion[1] - cropRegion[0]
 	img_y 	   = cropRegion[0]
 
-	#print("image height:",repr(img_height))
-	#print("image y     :",repr(img_y))
+	# print("image height:",repr(img_height))
+	# print("image y     :",repr(img_y))
 
 	h_pixel_density = calcHorPixelDensity(img)
 	v_pixel_density = calcVerPixelDensity(img)
