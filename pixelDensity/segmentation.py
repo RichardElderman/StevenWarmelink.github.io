@@ -478,6 +478,39 @@ def rotateCoordinates(coordinateList,img_angle, img_center,img_height,img_width)
 
 	return resultList
 
+#Creates a new line for the XML file
+def createLineXML(name, x, y, w, h, utf):
+	new_line = name + '-zone-HUMAN-x=' + repr(x) + '-y=' +repr(y) + '-w=' + repr(w) +'-h=' +repr(h) + '-ybas=0000-nink=0000-segm=PERM1fwd <txt>@TAGGED_BY_TEAM_CRITICAL</txt> <utf> ' + utf + ' </uft>'
+	return new_line 
+
+
+#Adds an XML line to the XML file
+def addLineXML(XML, line):
+	new_XML = XML + line + '\n' 
+	return new_XML
+
+#Export the XML file
+def exportXML(XML, name):
+	with open("segmentation/" + name + ".xml", "w") as file:
+	    file.write(XML)
+
+
+def createXML(name, locationData, imgNum):
+	name = name 
+	#Number of the current image that is being segmented:
+	img_num = imgNum
+	P1_XML = ''
+	#For each segment in the image
+	for segment in locationData:
+		#Once these variables are found:
+		x = segment[0]
+		y = segment[1]
+		w = segment[2]
+		h = segment[3] 
+		line = createLineXML(name, x,y,w,h,'TBD')
+		P1_XML = addLineXML(P1_XML, line)
+	exportXML(P1_XML, name)	
+
 def showRoIs(rotatedList, inputImg):
 	height, width = inputImg.shape 
 	for v_pixel in range(0,width):
@@ -494,9 +527,9 @@ def showRoIs(rotatedList, inputImg):
 # Function which saves all images in list as jpg file in current folder
 def writeImages(images, readstr):
 	for i in range(0,len(images)):
-		cv2.imwrite("images/" + readstr + "_" + str(i) + ".jpg",images[i])
+		cv2.imwrite("segmentation/" + readstr + "_" + str(i).zfill(2) + ".jpg",images[i])
 
-def loopthroughimages(readStr): 
+def loopthroughimages(readStr, fileNr): 
 
 	# Read image
 	inputImg = cv2.imread(readStr,0)
@@ -539,7 +572,7 @@ def loopthroughimages(readStr):
 
 	rotatedList = rotateCoordinates(coordinateList,img_angle,img_center,height, width)
 
-	showRoIs(rotatedList, inputImg)
+	#showRoIs(rotatedList, inputImg)
 
 	square_images = []
 	for image in images:
@@ -547,15 +580,19 @@ def loopthroughimages(readStr):
 		if tempImg is not None:
 			square_images.append(tempImg)
 
-	# writeImages(square_images, readStr)
+
+	createXML(readStr, rotatedList, fileNr)
+	writeImages(square_images, readStr)
 
 
 if __name__ == "__main__":
 	
+	j = 0
 	for i, filename in enumerate(os.listdir(".")):
-			if filename.endswith("example1.pgm"):
+			if filename.endswith("navis-Ming-Qing_18341_0004-line-001-y1=0-y2=289.pgm"):
+				i += 1
 				print(filename, repr(i))
-				loopthroughimages(filename)
+				loopthroughimages(filename, j)
 
 
 	

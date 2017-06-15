@@ -29,7 +29,7 @@ def binarize(img):
 #Reads all of the labelled images, and determined all different classes
 def readLabelledData(maxFiles):
   lbls = []
-  for i, file in enumerate(sorted(os.listdir('Labelled'))):
+  for i, file in enumerate(sorted(os.listdir('labelled'))):
     if file.endswith('.pgm'):
       utf = file[:4]
       if utf not in lbls:
@@ -39,10 +39,10 @@ def readLabelledData(maxFiles):
 
   numlbl = len(lbls) # number of classes in the data set
   labelled_data = []
-  for i, file in enumerate(sorted(os.listdir('Labelled'))):
+  for i, file in enumerate(sorted(os.listdir('labelled'))):
     print(i,  end="\r")
     if file.endswith('.pgm'):
-      img = cv2.imread('Labelled/' + file, 0)
+      img = cv2.imread('labelled/' + file, 0)
       img = img.reshape(1, sum(len(x) for x in img))
       bin_img = binarize(img) # for now binarize image here (must already be done, but not)
       #print(np.unique(bin_img))
