@@ -220,6 +220,7 @@ total_iterations = 0
 def optimize(num_iterations):
     # Ensure we update the global variable rather than a local copy.
     global total_iterations
+    print("Train for", num_iterations, "iterations: ")
 
     # Start-time used for printing time-usage below.
     start_time = time.time()
@@ -357,16 +358,15 @@ def print_test_accuracy(show_example_errors=False,
 
         # Get the images from the test-set between index i and j.
         images = np.vstack([x[1] for x in test_data[i:j]])
-        # print(np.shape(images))
+
         # Get the associated labels.
         labels = np.vstack([x[0] for x in test_data[i:j]])
-        # print(labels[1])
+
         # Create a feed-dict with these images and labels.
         feed_dict = {x: images,
                      y_true: labels}
-        # print(feed_dict[x][0], feed_dict[y_true][0])
+
         # Calculate the predicted class using TensorFlow.
-        # print(feed_dict[x][0], feed_dict[y_true][0])
         cls_pred[i:j] = session.run(y_pred_cls, feed_dict=feed_dict)
 
         # Set the start-index for the next batch to the
@@ -375,13 +375,10 @@ def print_test_accuracy(show_example_errors=False,
 
     # Convenience variable for the true class-numbers of the test-set.
     cls_true = np.hstack([x[3] for x in test_data])
-    print("Predicted classes: ")
-    print(cls_pred)
-    print("True classes: ")
-    print(cls_true)
+    
     # Create a boolean array whether each image is correctly classified.
     correct = (cls_true == cls_pred)
-    # print(correct)
+
     # Calculate the number of correctly classified images.
     # When summing a boolean array, False means 0 and True means 1.
     correct_sum = correct.sum()
@@ -405,7 +402,72 @@ def print_test_accuracy(show_example_errors=False,
         plot_confusion_matrix(cls_pred=cls_pred)
 
 
+def print_test_accuracy2(show_example_errors=False,
+                        show_confusion_matrix=False):
 
+    # Number of images in the test-set.
+    num_test = len(test_data)
+
+    # Allocate an array for the predicted classes which
+    # will be calculated in batches and filled into this array.
+    cls_pred = np.zeros(shape=num_test, dtype=np.int)
+
+    # Now calculate the predicted classes for the batches.
+    # We will just iterate through all the batches.
+    # There might be a more clever and Pythonic way of doing this.
+
+    # The starting index for the next batch is denoted i.
+    i = 0
+
+    while i < num_test:
+        # The ending index for the next batch is denoted j.
+        j = min(i + test_batch_size, num_test)
+
+        # Get the images from the test-set between index i and j.
+        images = np.vstack([x[1] for x in test_data[i:j]])
+
+        # Get the associated labels.
+        labels = np.vstack([x[0] for x in test_data[i:j]])
+
+        # Create a feed-dict with these images and labels.
+        feed_dict = {x: images,
+                     y_true: labels}
+
+        # Calculate the predicted class using TensorFlow.
+
+        cls_pred[i:j] = session2.run(y_pred_cls, feed_dict=feed_dict)
+
+        # Set the start-index for the next batch to the
+        # end-index of the current batch.
+        i = j
+
+    # Convenience variable for the true class-numbers of the test-set.
+    cls_true = np.hstack([x[3] for x in test_data])
+    
+    # Create a boolean array whether each image is correctly classified.
+    correct = (cls_true == cls_pred)
+
+    # Calculate the number of correctly classified images.
+    # When summing a boolean array, False means 0 and True means 1.
+    correct_sum = correct.sum()
+
+    # Classification accuracy is the number of correctly classified
+    # images divided by the total number of images in the test-set.
+    acc = float(correct_sum) / num_test
+
+    # Print the accuracy.
+    msg = "Accuracy on Test-Set: {0:.1%} ({1} / {2})"
+    print(msg.format(acc, correct_sum, num_test))
+
+    # Plot some examples of mis-classifications, if desired.
+    if show_example_errors:
+        print("Example errors:")
+        plot_example_errors(cls_pred=cls_pred, correct=correct)
+
+    # Plot the confusion matrix, if desired.
+    if show_confusion_matrix:
+        print("Confusion Matrix:")
+        plot_confusion_matrix(cls_pred=cls_pred)
 
 
 if __name__ =="__main__":
@@ -510,7 +572,7 @@ if __name__ =="__main__":
 
     #preditct
     y_pred = tf.nn.softmax(layer_fc2)
-    print(y_pred)
+
     y_pred_cls = tf.argmax(y_pred, dimension=1)
 
     #cross entropy . Softmax
@@ -525,6 +587,9 @@ if __name__ =="__main__":
     correct_prediction = tf.equal(y_pred_cls, y_true_cls)
     accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
+    # Initialize saver 
+    saver = tf.train.Saver()
+
     #session
     session = tf.Session()
     session.run(tf.global_variables_initializer())
@@ -532,13 +597,32 @@ if __name__ =="__main__":
     n_batches = 100
 
     train_batch_size = round(train_n/n_batches)
-    
+
+    print("\nTest initial model...")
     print_test_accuracy()
-
+    print("\n")
     optimize(num_iterations=int(n_batches/2))
 
+    print("\nTest optimized model...")
     print_test_accuracy(show_example_errors=True)
 
     optimize(num_iterations=int(n_batches/2))
 
+    print("\nTest optimized model...")
     print_test_accuracy(show_example_errors=True)
+
+    # saving the model
+    print("\nTry to save model...")
+    save_dir = 'checkpoints/'
+    if not os.path.exists(save_dir):
+       os.makedirs(save_dir)    
+    save_path = saver.save(session, 'checkpoints/my-model.cktp')
+    print("Model saved in file: %s" % save_path)
+
+    # restore and run model to check if correctly saved (output should be the ssame as previous)
+    print("\nTry to restore model...")
+    session2 = tf.Session()
+    saver.restore(session2, save_path=save_path)
+    print("Model restored.")
+    print("\nTest restored model...")
+    print_test_accuracy2() # this function uses "session2" instead of "session", and thus the restored model
