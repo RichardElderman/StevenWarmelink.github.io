@@ -2,4 +2,4 @@ All unbalanced labelled data:
 http://gofile.me/6uTcd/kNO7TvgqS
 
 Balanced data (without font data - 589 classes):
-http://gofile.me/6uTcd/epv0m3w7A
+http://gofile.me/6uTcd/pqZTkxU0c
