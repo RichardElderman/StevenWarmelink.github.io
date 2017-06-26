@@ -272,6 +272,27 @@ def optimize(num_iterations):
     print("Time usage: " + str(timedelta(seconds=int(round(time_dif)))))
 
 
+def LoadUTF():
+    print ('Reading UTFs: ')
+    readMe = open('checkpoints/Allclass_UTF.txt', 'r').readlines()
+
+    # # Creates a list containing 5 lists, each of 8 items, all set to 0
+    # w, h = 2, len(readMe)
+    # document = [[0 for x in range(w)] for y in range(h)]
+
+    utfs=[]
+    for i in range(0, len(readMe)):
+       temp=readMe[i].strip()
+       utfs.append(temp)
+       #print(utfs[i])
+    print ('UTFs are Imported')
+    print ('Length of UTFs: '+str(len(utfs)))
+    print ('example UTF:', utfs[100])
+    print('example UTF:', utfs[200])
+    print('example UTF:', utfs[300])
+    return utfs
+
+
 def plot_example_errors(cls_pred, correct):
     # This function is called from print_test_accuracy() below.
 
@@ -487,6 +508,16 @@ if __name__ =="__main__":
     #Importing Input & Print data
     path = 'Labelled'
     labelled_data, allclasses = readLabelledData(path)
+    #saving All Utfs in checkpoints folder
+    print('Saving UTF')
+    saveFile = open('checkpoints/Allclass_UTF.txt', 'w')
+    saveFile.write(allclasses[0])
+    for inx in range(1,len(allclasses)):
+      saveFile.write("\n"+allclasses[inx])
+
+    print ('File Created!')
+    saveFile.close()
+    
     shuffle(labelled_data)
 
     classes_n = len(allclasses)

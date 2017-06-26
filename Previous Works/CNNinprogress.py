@@ -141,6 +141,26 @@ def convLayerValid(dat, mask):
       out[r,c] = convolution(sub, mask)
 
   return out
+
+def LoadUTF():
+    print ('Reading UTFs: ')
+    readMe = open('checkpoints/Allclass_UTF.txt', 'r').readlines()
+
+    # # Creates a list containing 5 lists, each of 8 items, all set to 0
+    # w, h = 2, len(readMe)
+    # document = [[0 for x in range(w)] for y in range(h)]
+
+    utfs=[]
+    for i in range(0, len(readMe)):
+       temp=readMe[i].strip()
+       utfs.append(temp)
+       #print(utfs[i])
+    print ('UTFs are Imported')
+    print ('Length of UTFs: '+str(len(utfs)))
+    print ('example UTF:', utfs[100])
+    print('example UTF:', utfs[200])
+    print('example UTF:', utfs[300])
+    return utfs
   
 # Main function of a convolution layer: slides mask over dat, at each place 
 # doing a convolution with the part of dat under the mask. ("full" conv)
