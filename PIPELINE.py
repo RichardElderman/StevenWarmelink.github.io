@@ -10,7 +10,7 @@ from datetime import timedelta
 from datetime import datetime
 import math
 import sys
-import segmentation as seg
+import pipe_segmentation as seg
 
 def loadUTF(path):
     readMe = open(path, 'r').readlines()
