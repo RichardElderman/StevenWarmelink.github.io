@@ -513,6 +513,8 @@ def compareAccuracy(acc):
 if __name__ =="__main__":
 
 
+
+
     train_batch_size    = int(sys.argv[1])
     learning_rate       = float(sys.argv[2])
     num_iterations      = int(sys.argv[3])
@@ -524,31 +526,37 @@ if __name__ =="__main__":
     dir_name = 'Results_' + ('%s' % datetime.now())
     dir_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'runs/' + dir_name)
     os.makedirs(dir_path)
-
-
-
-
-    # Configuration of CNN
-    # Convolutional Layer 1.
-    filter_size1 = 5  # Convolution filters are 5 x 5 pixels.
+    filter_size1 = 10  # Convolution filters are 5 x 5 pixels.
     num_filters1 = 16  # There are 16 of these filters.
 
     # Convolutional Layer 2.
     filter_size2 = 5  # Convolution filters are 5 x 5 pixels.
     num_filters2 = 36  # There are 36 of these filters.
 
+    filter_size3 = 8
+    num_filters3 = 24
+
+    filter_size4 = 10
+    num_filters4 = 16
+
     # Fully-connected layer.
     fc_size = 128  # Number of neurons in fully-connected layer.
 
-    # train_batch_size = 1000
 
     #Importing Input & Print data
-    tot_n = 16339
-    train_n = 12000
-    test_n = 839
-    valid_n = 3500
-    labelled_data, allclasses = readLabelledData(tot_n)
+    path = 'Labelled'
+    labelled_data, allclasses = readLabelledData(path)
     shuffle(labelled_data)
+
+    classes_n = len(allclasses)
+    tot_n = len(labelled_data)
+    train_n = round(tot_n/10*8)
+    test_n = round(tot_n/5)
+    valid_n = 0
+
+    print('Total:' +repr(tot_n) + '\ntrain: ' + repr(train_n) + '\ntest: ' + repr(test_n) + '\nclasses: ' +  repr(classes_n))
+
+
     train_data, test_data, valid_data = createSubData(labelled_data, train_n, test_n, valid_n)
 
     #Data Dimension
@@ -606,25 +614,16 @@ if __name__ =="__main__":
     layer_conv3, weights_conv3 = \
         new_conv_layer(input=layer_conv2,
                        num_input_channels=num_filters2,
-                       filter_size=filter_size2,
-                       num_filters=num_filters2,
+                       filter_size=filter_size3,
+                       num_filters=num_filters3,
                        use_pooling=True)
 
     layer_conv4, weights_conv4 = \
         new_conv_layer(input=layer_conv3,
-                       num_input_channels=num_filters2,
-                       filter_size=filter_size2,
-                       num_filters=num_filters2,
+                       num_input_channels=num_filters3,
+                       filter_size=filter_size4,
+                       num_filters=num_filters4,
                        use_pooling=True)
-
-    
-    layer_conv4, weights_conv4 = \
-        new_conv_layer(input=layer_conv3,
-                       num_input_channels=num_filters2,
-                       filter_size=filter_size2,
-                       num_filters=num_filters2,
-                       use_pooling=True)
-
 
     layer_flat, num_features = flatten_layer(layer_conv4)
 

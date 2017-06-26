@@ -1,5 +1,5 @@
 #!/bin/bash
-train_batch_size=(500)
+train_batch_size=(2000)
 learning_rate_vals=(0.01)
 epochs=(100)
 
@@ -9,7 +9,7 @@ do
 	do
 		for batch_val in "${train_batch_size[@]}"
 		do
-			python3 CNN_TF_python.py $batch_val $lr_val $epoch_val
+			python3 train_cnn.py $batch_val $lr_val $epoch_val
 		done
 	done
 done
