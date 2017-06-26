@@ -479,7 +479,7 @@ def rotateCoordinates(coordinateList,img_angle, img_center,img_height,img_width)
 
 #Creates a new line for the XML file
 def createLineXML(name, x, y, w, h, utf):
-	new_line = name + '-zone-HUMAN-x=' + repr(x) + '-y=' +repr(y) + '-w=' + repr(w) +'-h=' +repr(h) + '-ybas=0000-nink=0000-segm=PERM1fwd <txt>@TAGGED_BY_TEAM_CRITICAL</txt> <utf> ' + utf + ' </uft>'
+	new_line = name + '-zone-HUMAN-x=' + repr(x) + '-y=' +repr(y) + '-w=' + repr(w) +'-h=' +repr(h) + '-ybas=0000-nink=0000-segm=PERM1fwd <txt>@TAGGED_BY_TEAM_CRITICAL</txt> <utf> ' + utf + ' </utf>'
 	return new_line 
 
 
@@ -490,7 +490,7 @@ def addLineXML(XML, line):
 
 #Export the XML file
 def exportXML(XML, name):
-	with open("segmentation/" + name + ".xml", "w") as file:
+	with open(name + ".xml", "w") as file:
 	    file.write(XML)
 
 
@@ -522,9 +522,9 @@ def createXMLFile(locationData, utfs):
 		h = segment[4] 
 		utf = utfs[i]
 		line = createLineXML(name, x,y,w,h,utf)
-		P1_XML = addLineXML(P1_XML, line)
+		XML = addLineXML(XML, line)
 		i = i + 1
-	exportXML(P1_XML, name_out)
+	exportXML(XML, name_out)
 
 def showRoIs(rotatedList, inputImg):
 	height, width = inputImg.shape 
