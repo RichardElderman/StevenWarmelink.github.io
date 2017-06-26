@@ -3,7 +3,7 @@ import numpy as np
 import math
 import os
 import sys
-sys.path.append('/usr/local/lib/python2.7/site-packages')
+#sys.path.append('/usr/local/lib/python2.7/site-packages')
 
 # Function which binarizes the image by performing Otsu binarization after applying 
 # a guassian blur. 

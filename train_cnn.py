@@ -648,7 +648,7 @@ if __name__ =="__main__":
     #preditct
     y_pred = tf.nn.softmax(layer_fc2)
     print(y_pred)
-    y_pred_cls = tf.argmax(y_pred, dimension=1)
+    y_pred_cls = tf.argmax(y_pred, dimension=1,name="output_to_restore")
 
     #cross entropy . Softmax
     cross_entropy = tf.nn.softmax_cross_entropy_with_logits(logits=layer_fc2,
