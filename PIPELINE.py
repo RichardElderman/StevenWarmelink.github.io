@@ -13,9 +13,7 @@ import sys
 import segmentation as seg
 
 def loadUTF(path):
-
     readMe = open(path, 'r').readlines()
-
     utfs=[]
     for i in range(0, len(readMe)):
        temp=readMe[i].strip()
@@ -27,26 +25,23 @@ def classifyImages(imgs, utfs):
 
     num_images = len(imgs)
 
-    # allocate array for utf codes (strings)
+    # allocate array for class predictions
     predictions = np.zeros(shape=num_images, dtype=np.int)
 
     # reshape input images to fit the CNN data structure
-    images = np.vstack([x[1] for x in imgs])
-        
+    images = np.vstack([np.hstack(x) for x in imgs])
+
     # labels = np.vstack([x[0] for x in test_data[i:j]])
 
     # Create a feed-dict with these images and labels.
-    feed_dict = {"x": images}
+    feed_dict = {x : images} ########## x is a name defined in the model
 
     # ,y_true: labels}
     predictions = session.run(y_pred_cls, feed_dict=feed_dict) ####################################
 
-    print("Predicted classes: ")
-    print(cls_pred)
-
     # convert class codes to utfs
     out = []
-    for cl in classes:
+    for cl in predictions:
         out.append(utfs[cl])
 
     return out
@@ -76,8 +71,10 @@ if __name__ =="__main__":
     # w2 = graph.get_tensor_by_name("w2:0")
     # feed_dict ={w1:13.0,w2:17.0}
 
-    #Now, access the op that you want to run. (used in the classification function) 
+    #Now, access the ops that you want to run. (used in the classification function) 
     y_pred_cls = graph.get_tensor_by_name("output_to_restore:0") ### the name must be stated in the model that was saved
+    x = graph.get_tensor_by_name("x:0") ### the name must be stated in the model that was saved
+
     print("Model loaded.")
     # process all raw input files
     for i, filename in enumerate(os.listdir(images_path)):
@@ -89,7 +86,8 @@ if __name__ =="__main__":
             print("Segmentation completed, classifying...")
             # classify cropped images, return list of utf codes
             pred_classes = classifyImages(images, utf_codes)
-
+            print("Predicted utfs: ")
+            print(pred_classes)
             # generate xml file for this image
             seg.createXMLFile(xml_data, pred_classes)
 
