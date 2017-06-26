@@ -1,7 +1,7 @@
 #!/bin/bash
-train_batch_size=(500 1000 2000)
-learning_rate_vals=(0.01 0.001 0.0001)
-epochs=(100 200 400)
+train_batch_size=(500)
+learning_rate_vals=(0.01)
+epochs=(100)
 
 for epoch_val in "${epochs[@]}"
 do

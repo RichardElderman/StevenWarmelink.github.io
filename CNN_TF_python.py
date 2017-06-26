@@ -419,14 +419,103 @@ def print_test_accuracy(show_example_errors=False,
 
 
 
+def print_test_accuracy2(show_example_errors=False,
+                        show_confusion_matrix=False):
+
+    # Number of images in the test-set.
+    num_test = len(test_data)
+
+    # Allocate an array for the predicted classes which
+    # will be calculated in batches and filled into this array.
+    cls_pred = np.zeros(shape=num_test, dtype=np.int)
+
+    # Now calculate the predicted classes for the batches.
+    # We will just iterate through all the batches.
+    # There might be a more clever and Pythonic way of doing this.
+
+    # The starting index for the next batch is denoted i.
+    i = 0
+
+    while i < num_test:
+        # The ending index for the next batch is denoted j.
+        j = min(i + test_batch_size, num_test)
+
+        # Get the images from the test-set between index i and j.
+        images = np.vstack([x[1] for x in test_data[i:j]])
+
+        # Get the associated labels.
+        labels = np.vstack([x[0] for x in test_data[i:j]])
+
+        # Create a feed-dict with these images and labels.
+        feed_dict = {x: images,
+                     y_true: labels}
+
+        # Calculate the predicted class using TensorFlow.
+
+        cls_pred[i:j] = session2.run(y_pred_cls, feed_dict=feed_dict)
+
+        # Set the start-index for the next batch to the
+        # end-index of the current batch.
+        i = j
+
+    # Convenience variable for the true class-numbers of the test-set.
+    cls_true = np.hstack([x[3] for x in test_data])
+    
+    # Create a boolean array whether each image is correctly classified.
+    correct = (cls_true == cls_pred)
+
+    # Calculate the number of correctly classified images.
+    # When summing a boolean array, False means 0 and True means 1.
+    correct_sum = correct.sum()
+
+    # Classification accuracy is the number of correctly classified
+    # images divided by the total number of images in the test-set.
+    acc = float(correct_sum) / num_test
+
+    # Print the accuracy.
+    msg = "Accuracy on Test-Set: {0:.1%} ({1} / {2})"
+    print(msg.format(acc, correct_sum, num_test))
+
+    # Plot some examples of mis-classifications, if desired.
+    if show_example_errors:
+        print("Example errors:")
+        plot_example_errors(cls_pred=cls_pred, correct=correct)
+
+    # Plot the confusion matrix, if desired.
+    if show_confusion_matrix:
+        print("Confusion Matrix:")
+        plot_confusion_matrix(cls_pred=cls_pred)
+
+
+def saveModel(session):
+    print("\nTry to save model...")
+    save_dir = 'checkpoints/'
+    if not os.path.exists(save_dir):
+       os.makedirs(save_dir)    
+    save_path = saver.save(session, 'checkpoints/my-model.cktp')
+    print("Model saved in file: %s" % save_path)
+
+def compareAccuracy(acc):
+    dir_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'checkpoints/')
+    accuracy_file = os.path.join(dir_path,'acc.txt')
+    print(repr(accuracy_file),repr(acc))
+    acc_file = open(accuracy_file, 'r')
+    old_acc = float(acc_file.read())
+    acc_file.close()
+    if acc > old_acc:
+        new_acc_file = open(accuracy_file,'w')
+        new_acc_file.write(str(acc))
+        new_acc_file.close()
+        return True
+    return False
 
 
 if __name__ =="__main__":
 
 
-    train_batch_size    = int(sys.argv[1])
+    train_batch_size    = 5#int(sys.argv[1])
     learning_rate       = float(sys.argv[2])
-    num_iterations      = int(sys.argv[3])
+    num_iterations      = 5#int(sys.argv[3])
 
     print("train batch size :" + repr(train_batch_size))
     print("learning rate    :" + repr(learning_rate))
@@ -567,6 +656,8 @@ if __name__ =="__main__":
                                                             labels=y_true)
     cost = tf.reduce_mean(cross_entropy)
 
+    saver = tf.train.Saver()
+
     #oPTIMIZATION
     optimizer = tf.train.AdamOptimizer(learning_rate).minimize(cost)
 
@@ -603,3 +694,21 @@ if __name__ =="__main__":
     results.write('Final Test accuracy: ' + str(acc) + '\n')
     results.write('Time spent training: ' + time_spent + '\n')
     results.close()
+
+    higher_acc = compareAccuracy(acc)
+
+    if higher_acc:
+        dir_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'checkpoints/')
+        accuracy_file = os.path.join(dir_path,'best_run_settings.txt')
+        acc_file = open(accuracy_file, 'w')
+        acc_file.write('Run parameters\n')
+        acc_file.write('Number of epochs: ' + str(num_iterations) + '\n')
+        acc_file.write('Hidden rate: ' + str(learning_rate) + '\n')
+        acc_file.write('Batch size: ' + str(train_batch_size) + '\n')
+        acc_file.write('Final Test accuracy: ' + str(acc) + '\n')
+        acc_file.write('Time spent training: ' + time_spent + '\n')
+        acc_file.close()
+        saveModel(session)
+
+
+
