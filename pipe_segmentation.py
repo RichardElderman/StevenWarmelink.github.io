@@ -495,10 +495,8 @@ def exportXML(XML, name):
 	    file.write(XML)
 
 
-def createXMLData(name, locationData, imgNum):
+def createXMLData(name, locationData):
 	name = name 
-	#Number of the current image that is being segmented:
-	img_num = imgNum
 	P1_XML = []
 	#For each segment in the image
 	for segment in locationData:
@@ -547,7 +545,7 @@ def writeImages(images, readstr):
 	for i in range(0,len(images)):
 		cv2.imwrite("segmentation/" + readstr + "_" + str(i).zfill(2) + ".jpg",images[i])
 
-def loopthroughimages(readStr, fileNr): 
+def loopthroughimages(readStr): 
 
 	# Read image
 	inputImg = cv2.imread(readStr,0)
@@ -599,7 +597,7 @@ def loopthroughimages(readStr, fileNr):
 			square_images.append(tempImg)
 
 
-	xml_data = createXMLData(readStr, rotatedList, fileNr)
+	xml_data = createXMLData(readStr, rotatedList)
 	return square_images, xml_data
 
 
