@@ -487,6 +487,16 @@ if __name__ =="__main__":
     #Importing Input & Print data
     path = 'Labelled'
     labelled_data, allclasses = readLabelledData(path)
+    #saving All Utfs in checkpoints folder
+    print('Saving UTF')
+    saveFile = open('checkpoints/Allclass_UTF.txt', 'w')
+    saveFile.write(allclasses[0])
+    for inx in range(1,len(allclasses)):
+      saveFile.write("\n"+allclasses[inx])
+
+    print ('File Created!')
+    saveFile.close()
+    
     shuffle(labelled_data)
 
     classes_n = len(allclasses)
