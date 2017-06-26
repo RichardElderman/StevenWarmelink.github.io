@@ -36,7 +36,8 @@ def classifyImages(imgs, utfs):
     # labels = np.vstack([x[0] for x in test_data[i:j]])
 
     # Create a feed-dict with these images and labels.
-    feed_dict = {x: images}
+    feed_dict = {"x": images}
+
     # ,y_true: labels}
     predictions = session.run(y_pred_cls, feed_dict=feed_dict) ####################################
 
@@ -56,15 +57,16 @@ if __name__ =="__main__":
     # load list of utf codes (in the same order as the used model was trained on)
     utf_codes = loadUTF('Allclass_UTF.txt')
 
-    meta_path = 'checkpoints/my_test_model-1000.meta'
-    save_path = 'checkpoints/my-model.cktp'
+    meta_path = 'checkpoints/my-model.cktp.meta'
+    model_path = 'checkpoints/my-model.cktp'
+    images_path = "unlabelled"
 
     # load CNN
     print("\nTry to load model...")
     session=tf.Session()    
     #First let's load meta graph and restore weights
     saver = tf.train.import_meta_graph(meta_path)  ##### need to change path
-    saver.restore(session, save_path=save_path)
+    saver.restore(session, save_path=model_path)
 
     # Now, let's access and create placeholders variables and
     # create feed-dict to feed new data
@@ -77,17 +79,16 @@ if __name__ =="__main__":
     #Now, access the op that you want to run. (used in the classification function) 
     y_pred_cls = graph.get_tensor_by_name("output_to_restore:0") ### the name must be stated in the model that was saved
     print("Model loaded.")
-
     # process all raw input files
-    for i, filename in enumerate(os.listdir(".")):
+    for i, filename in enumerate(os.listdir(images_path)):
         if filename.endswith(".pgm"):
             i += 1
-            print(filename, repr(i))
+            print("Processing", filename)
             # get list of cropped files, and list of lines in xml file
-            images, xml_data = seg.loopthroughimages(filename, j)
-
+            images, xml_data = seg.loopthroughimages(images_path+"/"+filename)
+            print("Segmentation completed, classifying...")
             # classify cropped images, return list of utf codes
-            pred_classes = classifyImages(images, utfcodes)
+            pred_classes = classifyImages(images, utf_codes)
 
             # generate xml file for this image
             seg.createXMLFile(xml_data, pred_classes)
