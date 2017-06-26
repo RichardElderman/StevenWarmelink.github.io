@@ -589,7 +589,7 @@ if __name__ == "__main__":
 	
 	j = 0
 	for i, filename in enumerate(os.listdir(".")):
-			if filename.endswith("navis-Ming-Qing_18341_0004-line-001-y1=0-y2=289.pgm"):
+			if filename.endswith(".pgm"):
 				i += 1
 				print(filename, repr(i))
 				loopthroughimages(filename, j)

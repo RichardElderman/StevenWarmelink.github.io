@@ -8,7 +8,11 @@ import os
 # from sklearn.metrics import confusion_matrix
 import time
 from datetime import timedelta
+from datetime import datetime
 import math
+import sys
+
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 # from tensorflow.examples.tutorials.mnist import input_data
 
 
@@ -270,8 +274,12 @@ def optimize(num_iterations):
     # Difference between start and end-times.
     time_dif = end_time - start_time
 
+    time_spent = str(timedelta(seconds=int(round(time_dif))))
+
     # Print the time-usage.
-    print("Time usage: " + str(timedelta(seconds=int(round(time_dif)))))
+    print("Time usage: " + time_spent)
+
+    return time_spent
 
 
 def plot_example_errors(cls_pred, correct):
@@ -407,11 +415,30 @@ def print_test_accuracy(show_example_errors=False,
         print("Confusion Matrix:")
         plot_confusion_matrix(cls_pred=cls_pred)
 
+    return acc
+
 
 
 
 
 if __name__ =="__main__":
+
+
+    train_batch_size    = int(sys.argv[1])
+    learning_rate       = float(sys.argv[2])
+    num_iterations      = int(sys.argv[3])
+
+    print("train batch size :" + repr(train_batch_size))
+    print("learning rate    :" + repr(learning_rate))
+    print("number of epochs :" + repr(num_iterations))
+
+    dir_name = 'Results_' + ('%s' % datetime.now())
+    dir_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'runs/' + dir_name)
+    os.makedirs(dir_path)
+
+
+
+
     # Configuration of CNN
     # Convolutional Layer 1.
     filter_size1 = 5  # Convolution filters are 5 x 5 pixels.
@@ -424,13 +451,13 @@ if __name__ =="__main__":
     # Fully-connected layer.
     fc_size = 128  # Number of neurons in fully-connected layer.
 
-    train_batch_size = 100
+    # train_batch_size = 1000
 
     #Importing Input & Print data
-    tot_n = 100000
-    train_n = 8000
-    test_n = 800
-    valid_n = 7200
+    tot_n = 16339
+    train_n = 12000
+    test_n = 839
+    valid_n = 3500
     labelled_data, allclasses = readLabelledData(tot_n)
     shuffle(labelled_data)
     train_data, test_data, valid_data = createSubData(labelled_data, train_n, test_n, valid_n)
@@ -487,7 +514,30 @@ if __name__ =="__main__":
                        num_filters=num_filters2,
                        use_pooling=True)
 
-    layer_flat, num_features = flatten_layer(layer_conv2)
+    layer_conv3, weights_conv3 = \
+        new_conv_layer(input=layer_conv2,
+                       num_input_channels=num_filters2,
+                       filter_size=filter_size2,
+                       num_filters=num_filters2,
+                       use_pooling=True)
+
+    layer_conv4, weights_conv4 = \
+        new_conv_layer(input=layer_conv3,
+                       num_input_channels=num_filters2,
+                       filter_size=filter_size2,
+                       num_filters=num_filters2,
+                       use_pooling=True)
+
+    
+    layer_conv4, weights_conv4 = \
+        new_conv_layer(input=layer_conv3,
+                       num_input_channels=num_filters2,
+                       filter_size=filter_size2,
+                       num_filters=num_filters2,
+                       use_pooling=True)
+
+
+    layer_flat, num_features = flatten_layer(layer_conv4)
 
     print("Number of Features: ")
     print(num_features)
@@ -505,6 +555,8 @@ if __name__ =="__main__":
                              num_outputs=num_classes,
                              use_relu=False)
 
+
+
     #preditct
     y_pred = tf.nn.softmax(layer_fc2)
     print(y_pred)
@@ -516,7 +568,7 @@ if __name__ =="__main__":
     cost = tf.reduce_mean(cross_entropy)
 
     #oPTIMIZATION
-    optimizer = tf.train.AdamOptimizer(learning_rate=1e-4).minimize(cost)
+    optimizer = tf.train.AdamOptimizer(learning_rate).minimize(cost)
 
     #Correct Pre
     correct_prediction = tf.equal(y_pred_cls, y_true_cls)
@@ -527,16 +579,27 @@ if __name__ =="__main__":
     session.run(tf.global_variables_initializer())
 
     ## next line == error ###############################################################################
-    print_test_accuracy()
+    # print_test_accuracy()
 
-    optimize(num_iterations=20)
+    time_spent = optimize(num_iterations)
 
-    print_test_accuracy()
+    # print_test_accuracy()
 
-    optimize(num_iterations=3)
+    # optimize(num_iterations=50)
 
-    print_test_accuracy(show_example_errors=True)
+    # print_test_accuracy()
 
-    optimize(num_iterations=20)
+    # optimize(num_iterations=50)
 
-    print_test_accuracy(show_example_errors=True)
+
+    acc = print_test_accuracy()
+
+    results_file = os.path.join(dir_path, 'parameters.txt')
+    results = open(results_file, 'w')
+    results.write('Run parameters\n')
+    results.write('Number of epochs: ' + str(num_iterations) + '\n')
+    results.write('Hidden rate: ' + str(learning_rate) + '\n')
+    results.write('Batch size: ' + str(train_batch_size) + '\n')
+    results.write('Final Test accuracy: ' + str(acc) + '\n')
+    results.write('Time spent training: ' + time_spent + '\n')
+    results.close()
