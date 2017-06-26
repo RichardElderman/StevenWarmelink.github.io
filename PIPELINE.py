@@ -1,15 +1,7 @@
 #Importing requirment
-import matplotlib.pyplot as plt
-from random import shuffle
 import tensorflow as tf
 import numpy as np
-import cv2
 import os
-import time
-from datetime import timedelta
-from datetime import datetime
-import math
-import sys
 import pipe_segmentation as seg
 
 def loadUTF(path):
@@ -30,8 +22,6 @@ def classifyImages(imgs, utfs):
 
     # reshape input images to fit the CNN data structure
     images = np.vstack([np.hstack(x) for x in imgs])
-
-    # labels = np.vstack([x[0] for x in test_data[i:j]])
 
     # Create a feed-dict with these images and labels.
     feed_dict = {x : images} ########## x is a name defined in the model
