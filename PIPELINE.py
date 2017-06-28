@@ -2,6 +2,7 @@
 import tensorflow as tf
 import numpy as np
 import os
+import sys
 import pipe_segmentation as seg
 
 def loadUTF(path):
@@ -38,12 +39,31 @@ def classifyImages(imgs, utfs):
 
 if __name__ =="__main__":
 
+
+    if(len(sys.argv)!=3): # check if args were given (argv includes pipeline.py, tehrefore 3)
+        print("Wrong input pattern for this program.")
+        print("The correct pattern is:")
+        print("python pipeline.py some_input_image.pgm some_input_xml.xml")
+        sys.exit(1)
+
+    input_image = sys.argv[1]
+    input_xml = sys.argv[2]
+    assert(input_image.endswith(".pgm"))
+    assert(input_xml.endswith(".xml"))
+
+    image_name = input_image[:-4]
+    xml_name = input_xml[:-4]
+    assert(image_name==xml_name)
+
+    if(os.path.isfile(input_image)==False):
+        print("Error: input image file not found")
+        sys.exit(1)
+
     # load list of utf codes (in the same order as the used model was trained on)
     utf_codes = loadUTF('Allclass_UTF.txt')
 
     meta_path = 'checkpoints/my-model.cktp.meta'
     model_path = 'checkpoints/my-model.cktp'
-    images_path = "unlabelled"
 
     # load CNN
     print("\nTry to load model...")
@@ -59,21 +79,20 @@ if __name__ =="__main__":
     x = graph.get_tensor_by_name("x:0") ### the name must be stated in the model that was saved
 
     print("Model loaded.")
-    # process all raw input files
-    for i, filename in enumerate(os.listdir(images_path)):
-        if filename.endswith(".pgm"):
-            i += 1
-            print("Processing", filename)
-            # get list of cropped files, and list of data for xml file
-            images, xml_data = seg.loopthroughimages(images_path+"/"+filename)
-            print("Segmentation completed, classifying...")
-            # classify cropped images, return list of utf codes
-            pred_classes = classifyImages(images, utf_codes)
-            print("Classification completed")
-            # generate xml file for this image
-            seg.createXMLFile(xml_data, pred_classes)
-            print("XML generated")
-            print("Processing", filename, "finished")
 
-            # writeImages(square_images, readStr) ## maybe save every cropped image (filename=utf?) ?
-
+    # process input image file
+    print("Processing", input_image)
+    # get list of cropped files, and list of data for xml file
+    images, xml_data = seg.loopthroughimages(input_image)
+    print("Segmentation completed,", len(images), "characters were found")
+    print("Classifying...")
+    # classify cropped images, return list of utf codes
+    if(len(images)>0):
+        pred_classes = classifyImages(images, utf_codes)
+        print("Classification completed")
+        # generate xml file for this image
+        seg.createXMLFile(xml_data, pred_classes, xml_name)
+        print("XML generated")
+        print("Processing", input_image, "finished")
+    else:
+        print("No characters were found in", input_image)
