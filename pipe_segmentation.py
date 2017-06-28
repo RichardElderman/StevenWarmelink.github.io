@@ -479,7 +479,8 @@ def rotateCoordinates(coordinateList,img_angle, img_center,img_height,img_width)
 
 #Creates a new line for the XML file
 def createLineXML(name, x, y, w, h, utf):
-	new_line = name + '-zone-HUMAN-x=' + repr(x) + '-y=' +repr(y) + '-w=' + repr(w) +'-h=' +repr(h) + '-ybas=0000-nink=0000-segm=PERM1fwd <txt>@TAGGED_BY_TEAM_CRITICAL</txt> <utf> ' + utf + ' </utf>'
+	# new_line = name + '-zone-HUMAN-x=' + repr(x) + '-y=' +repr(y) + '-w=' + repr(w) +'-h=' +repr(h) + '-ybas=0000-nink=0000-segm=PERM1fwd <txt>@TAGGED_BY_TEAM_CRITICAL</txt> <utf> ' + utf + ' </utf>'
+	new_line = 'navis-Ming-Qing_HarvYench_18_10_10092_0072-line-009-y1=1043-y2=1180-zone-HUMAN-x=' + repr(x) + '-y=' +repr(y) + '-w=' + repr(w) +'-h=' +repr(h) + '-ybas=0088-nink=1188-segm=PERM1fwd <txt> </txt> <utf> ' + utf + ' </utf>'
 	return new_line 
 
 
@@ -507,10 +508,11 @@ def createXMLData(name, locationData):
 		P1_XML.append([name, x,y,w,h])
 	return P1_XML
 
-def createXMLFile(locationData, utfs):
+def createXMLFile(locationData, utfs, xml_file_name):
 	XML = ''
 	i = 0
 	name_out = ''
+	# print(len(locationData), len(utfs))
 	#For each segment in the image
 	for segment in locationData:
 		#Once these variables are found:
@@ -524,7 +526,7 @@ def createXMLFile(locationData, utfs):
 		line = createLineXML(name, x,y,w,h,utf)
 		XML = addLineXML(XML, line)
 		i = i + 1
-	exportXML(XML, name_out)
+	exportXML(XML, xml_file_name)
 
 def showRoIs(rotatedList, inputImg):
 	height, width = inputImg.shape 
@@ -547,6 +549,7 @@ def writeImages(images, readstr):
 def loopthroughimages(readStr): 
 
 	# Read image
+
 	inputImg = cv2.imread(readStr,0)
 	# Binarize image
 	img = binarize(inputImg)
