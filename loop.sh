@@ -1,15 +1,8 @@
 #!/bin/bash
-train_batch_size=(2000)
-learning_rate_vals=(0.01)
-epochs=(100)
-
-for epoch_val in "${epochs[@]}"
-do
-	for lr_val in "${learning_rate_vals[@]}"
-	do
-		for batch_val in "${train_batch_size[@]}"
-		do
-			python3 train_cnn.py $batch_val $lr_val $epoch_val
-		done
-	done
+#learning_rate_vals=(2 3 4 5)
+#epochs=(36 24 20 36)
+declare -A pairs=( [5]=36) # [3]=24 [4]=20)
+for i in "${!pairs[@]}"; do
+  j=${pairs[$i]}
+  python3 train_cnn.py $i $j
 done

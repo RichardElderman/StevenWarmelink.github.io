@@ -230,31 +230,35 @@ def optimize(num_iterations):
 
     # Start-time used for printing time-usage below.
     start_time = time.time()
-
+    done_it = 0
     for i in range(total_iterations,
-                   total_iterations + num_iterations):
+                   num_iterations):
 
         # Get a batch of training examples.
         # x_batch now holds a batch of images and
         # y_true_batch are the true labels for those images.
-        start = total_iterations*train_batch_size
-        end = min((total_iterations+1)*train_batch_size, len(train_data))
+        start = i*train_batch_size
+        end = (i+1)*train_batch_size
+
+        if(start>end):
+            end = len(train_data)
+        
+        for (output, image, utf, class_number) in train_data[start:end]:
+            train_data.append((output, image, utf, class_number))
 
         x_batch = np.vstack([x[1] for x in train_data[start:end]])
         y_true_batch = np.vstack([x[0] for x in train_data[start:end]])
-        # x_batch, y_true_batch = train_data.next_batch(train_batch_size)
 
         # Put the batch into a dict with the proper names
         # for placeholder variables in the TensorFlow graph.
         feed_dict_train = {x: x_batch,
                            y_true: y_true_batch}
-
         # Run the optimizer using this batch of training data.
         # TensorFlow assigns the variables in feed_dict_train
         # to the placeholder variables and then runs the optimizer.
         session.run(optimizer, feed_dict=feed_dict_train)
-
-        # Print status every 100 iterations.
+        done_it = done_it + 1
+        # Print status every 1 iteration.
         if i % 1 == 0:
             # Calculate the accuracy on the training-set.
             acc = session.run(accuracy, feed_dict=feed_dict_train)
@@ -264,9 +268,10 @@ def optimize(num_iterations):
 
             # Print it.
             print(msg.format(i + 1, acc))
+            
 
     # Update the total number of iterations performed.
-    total_iterations += num_iterations
+    total_iterations += done_it
 
     # Ending time.
     end_time = time.time()
@@ -280,7 +285,6 @@ def optimize(num_iterations):
     print("Time usage: " + time_spent)
 
     return time_spent
-
 
 def plot_example_errors(cls_pred, correct):
     # This function is called from print_test_accuracy() below.
@@ -513,15 +517,18 @@ def compareAccuracy(acc):
 if __name__ =="__main__":
 
 
+    n_filters = int(sys.argv[2])
+    kernelsize = int(sys.argv[1])
 
-
-    train_batch_size    = int(sys.argv[1])
-    learning_rate       = float(sys.argv[2])
-    num_iterations      = int(sys.argv[3])
+    train_batch_size    = 2000#int(sys.argv[1])
+    learning_rate       = 0.01#float(sys.argv[2])
+    num_iterations      = 400#int(sys.argv[3])
 
     print("train batch size :" + repr(train_batch_size))
     print("learning rate    :" + repr(learning_rate))
     print("number of epochs :" + repr(num_iterations))
+    print("number of filters:" + repr(n_filters))
+    print("kernel size      :" + repr(kernelsize))
 
     dir_name = 'Results_' + ('%s' % datetime.now())
     dir_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'runs/' + dir_name)
@@ -530,8 +537,8 @@ if __name__ =="__main__":
     num_filters1 = 16  # There are 16 of these filters.
 
     # Convolutional Layer 2.
-    filter_size2 = 5  # Convolution filters are 5 x 5 pixels.
-    num_filters2 = 36  # There are 36 of these filters.
+    filter_size2 = kernelsize  # Convolution filters are 5 x 5 pixels.
+    num_filters2 = n_filters  # There are 36 of these filters.
 
     filter_size3 = 8
     num_filters3 = 24
@@ -614,18 +621,33 @@ if __name__ =="__main__":
     layer_conv3, weights_conv3 = \
         new_conv_layer(input=layer_conv2,
                        num_input_channels=num_filters2,
-                       filter_size=filter_size3,
-                       num_filters=num_filters3,
+                       filter_size=filter_size2,
+                       num_filters=num_filters2,
                        use_pooling=True)
 
     layer_conv4, weights_conv4 = \
         new_conv_layer(input=layer_conv3,
-                       num_input_channels=num_filters3,
-                       filter_size=filter_size4,
-                       num_filters=num_filters4,
+                       num_input_channels=num_filters2,
+                       filter_size=filter_size2,
+                       num_filters=num_filters2,
                        use_pooling=True)
 
-    layer_flat, num_features = flatten_layer(layer_conv4)
+    layer_conv5, weights_conv5 = \
+        new_conv_layer(input=layer_conv4,
+                       num_input_channels=num_filters2,
+                       filter_size=filter_size2,
+                       num_filters=num_filters2,
+                       use_pooling=True)
+
+    layer_conv6, weights_conv6 = \
+        new_conv_layer(input=layer_conv5,
+                       num_input_channels=num_filters2,
+                       filter_size=filter_size2,
+                       num_filters=num_filters2,
+                       use_pooling=True)    
+                                            
+
+    layer_flat, num_features = flatten_layer(layer_conv6)
 
     print("Number of Features: ")
     print(num_features)
