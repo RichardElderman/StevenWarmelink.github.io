@@ -40,59 +40,57 @@ def classifyImages(imgs, utfs):
 if __name__ =="__main__":
 
 
-    if(len(sys.argv)!=3): # check if args were given (argv includes pipeline.py, tehrefore 3)
+    if(len(sys.argv)!=2): # check if args were given (argv includes pipeline.py, tehrefore 3)
         print("Wrong input pattern for this program.")
         print("The correct pattern is:")
-        print("python pipeline.py some_input_image.pgm some_input_xml.xml")
+        print("python pipeline.py path_to_directory_with_raw_files")
         sys.exit(1)
 
-    input_image = sys.argv[1]
-    input_xml = sys.argv[2]
-    assert(input_image.endswith(".pgm"))
-    assert(input_xml.endswith(".xml"))
-
-    image_name = input_image[:-4]
-    xml_name = input_xml[:-4]
-    assert(image_name==xml_name)
-
-    if(os.path.isfile(input_image)==False):
-        print("Error: input image file not found")
+    # check if argument is an existing folder
+    input_dir = sys.argv[1]
+    if(os.path.isdir(input_dir)==False):
+        print("Image directory not found.")
         sys.exit(1)
 
     # load list of utf codes (in the same order as the used model was trained on)
     utf_codes = loadUTF('Allclass_UTF.txt')
 
+    # paths to the saved CNN files
     meta_path = 'checkpoints/my-model.cktp.meta'
     model_path = 'checkpoints/my-model.cktp'
 
     # load CNN
     print("\nTry to load model...")
-    session=tf.Session()    
-    #First let's load meta graph and restore weights
-    saver = tf.train.import_meta_graph(meta_path) 
-    saver.restore(session, save_path=model_path)
+    session=tf.Session()
+    saver = tf.train.import_meta_graph(meta_path) # load meta graph to be able to call certain parts in the CNN
+    saver.restore(session, save_path=model_path) # restore CNN
 
     graph = tf.get_default_graph()
 
-    #Now, access the ops that you want to run. (used in the classification function) 
+    # assign a variable to the parts in the CNN that will be called in a function (input and output layer)
     y_pred_cls = graph.get_tensor_by_name("output_to_restore:0") ### the name must be stated in the model that was saved
     x = graph.get_tensor_by_name("x:0") ### the name must be stated in the model that was saved
 
     print("Model loaded.")
 
-    # process input image file
-    print("Processing", input_image)
-    # get list of cropped files, and list of data for xml file
-    images, xml_data = seg.loopthroughimages(input_image)
-    print("Segmentation completed,", len(images), "characters were found")
-    print("Classifying...")
-    # classify cropped images, return list of utf codes
-    if(len(images)>0):
-        pred_classes = classifyImages(images, utf_codes)
-        print("Classification completed")
-        # generate xml file for this image
-        seg.createXMLFile(xml_data, pred_classes, xml_name)
-        print("XML generated")
-        print("Processing", input_image, "finished")
-    else:
-        print("No characters were found in", input_image)
+    for i, file in enumerate(sorted(os.listdir(input_dir))):
+    	if(file.endswith(".pgm")):
+		    # process input image file
+		    print("\nProcessing", file)
+		    # get list of cropped files, and list of data for xml file
+		    images, xml_data = seg.loopthroughimages(input_dir+"/"+file)
+		    # classify cropped images, return list of utf codes
+		    if(len(images)>0):
+		        print("Segmentation completed,", len(images), "characters were found")
+		        print("Classifying...")
+		        pred_classes = classifyImages(images, utf_codes)
+		        print("Classification completed")
+		        # generate xml file for this image
+		        xml_name = input_dir+"/"+file[:-4]
+		        seg.createXMLFile(xml_data, pred_classes, xml_name)
+		        print("XML generated")
+		        print("Processing", file, "finished")
+		    else:
+		        print("Segmentation completed, no characters were found in", file)
+		        print("Processing", file, "finished")
+    print("\nFinished processing all pgm files in the folder \""+input_dir+"\"")
