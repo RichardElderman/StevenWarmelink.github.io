@@ -53,11 +53,11 @@ if __name__ =="__main__":
         sys.exit(1)
 
     # load list of utf codes (in the same order as the used model was trained on)
-    utf_codes = loadUTF('Allclass_UTF.txt')
+    utf_codes = loadUTF('misc/Allclass_UTF.txt')
 
     # paths to the saved CNN files
-    meta_path = 'checkpoints/my-model.cktp.meta'
-    model_path = 'checkpoints/my-model.cktp'
+    meta_path = 'misc/my-model.cktp.meta'
+    model_path = 'misc/my-model.cktp'
 
     # load CNN
     print("\nTry to load model...")
