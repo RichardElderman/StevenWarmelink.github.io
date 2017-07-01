@@ -3,11 +3,12 @@
 This repository contains the files required to run the automatic classification of Chinese handwritten characters. Run instructions and dependencies can be found below.
 
 ### Dependencies
-
-`Python` version 3 or later (Python 3.5.2 was used for the project)
-`Tensorflow`
-`Numpy`
-`OpenCV2` 
+```
+- Python version 3 or later (Python 3.5.2 was used for the project)
+- Tensorflow
+- Numpy
+- OpenCV2 
+```
 
 ### Run instructions
 
