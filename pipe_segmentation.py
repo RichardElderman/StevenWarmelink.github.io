@@ -479,8 +479,9 @@ def rotateCoordinates(coordinateList,img_angle, img_center,img_height,img_width)
 
 #Creates a new line for the XML file
 def createLineXML(name, x, y, w, h, utf):
-	# new_line = name + '-zone-HUMAN-x=' + repr(x) + '-y=' +repr(y) + '-w=' + repr(w) +'-h=' +repr(h) + '-ybas=0000-nink=0000-segm=PERM1fwd <txt>@TAGGED_BY_TEAM_CRITICAL</txt> <utf> ' + utf + ' </utf>'
-	new_line = 'navis-Ming-Qing_HarvYench_18_10_10092_0072-line-009-y1=1043-y2=1180-zone-HUMAN-x=' + repr(x) + '-y=' +repr(y) + '-w=' + repr(w) +'-h=' +repr(h) + '-ybas=0088-nink=1188-segm=PERM1fwd <txt> </txt> <utf> ' + utf + ' </utf>'
+	name = os.path.basename(name.split('.pgm')[0])
+	new_line = name + '-zone-HUMAN-x=' + repr(x) + '-y=' +repr(y) + '-w=' + repr(w) +'-h=' +repr(h) + '-ybas=0000-nink=0000-segm=PERM1fwd <txt>@TAGGED_BY_TEAM_CRITICAL</txt> <utf> ' + utf + ' </utf>'
+	#new_line = 'navis-Ming-Qing_HarvYench_18_10_10092_0072-line-009-y1=1043-y2=1180-zone-HUMAN-x=' + repr(x) + '-y=' +repr(y) + '-w=' + repr(w) +'-h=' +repr(h) + '-ybas=0088-nink=1188-segm=PERM1fwd <txt> </txt> <utf> ' + utf + ' </utf>'
 	return new_line 
 
 
