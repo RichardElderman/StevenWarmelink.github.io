@@ -1,6 +1,6 @@
 # Handwriting Recognition project
 
-This repository contains the files required to run the automatic classification of Chinese handwritten characters for team CRITICAL. Run instructions and dependencies can be found below. The repository can be found [here](https://github.com/StevenWarmelink/StevenWarmelink.github.io "classifier repository webpage"), and the entire project (including training scripts etc.) can be found on our [main repository](https://github.com/HiradEmami/smartHWR "main repository webpage") page. 
+This repository contains the files required to run the automatic classification of Chinese handwritten characters created by team CRITICAL. Run instructions and dependencies can be found below. The repository can be found [here](https://github.com/StevenWarmelink/StevenWarmelink.github.io "classifier repository webpage"), and the entire project (including training scripts etc.) can be found on our [main repository](https://github.com/HiradEmami/smartHWR "main repository webpage") page. 
 
 ### Dependencies
 ```
