@@ -74,23 +74,23 @@ if __name__ =="__main__":
     print("Model loaded.")
 
     for i, file in enumerate(sorted(os.listdir(input_dir))):
-    	if(file.endswith(".pgm")):
-		    # process input image file
-		    print("\nProcessing", file)
-		    # get list of cropped files, and list of data for xml file
-		    images, xml_data = seg.loopthroughimages(input_dir+"/"+file)
-		    # classify cropped images, return list of utf codes
-		    if(len(images)>0):
-		        print("Segmentation completed,", len(images), "characters were found")
-		        print("Classifying...")
-		        pred_classes = classifyImages(images, utf_codes)
-		        print("Classification completed")
-		        # generate xml file for this image
-		        xml_name = input_dir+"/"+file[:-4]
-		        seg.createXMLFile(xml_data, pred_classes, xml_name)
-		        print("XML generated")
-		        print("Processing", file, "finished")
-		    else:
-		        print("Segmentation completed, no characters were found in", file)
-		        print("Processing", file, "finished")
+        if(file.endswith(".pgm")):
+            # process input image file
+            print("\nProcessing", file)
+            # get list of cropped files, and list of data for xml file
+            images, xml_data = seg.loopthroughimages(input_dir+"/"+file)
+            # classify cropped images, return list of utf codes
+            if(len(images)>0):
+                print("Segmentation completed,", len(images), "characters were found")
+                print("Classifying...")
+                pred_classes = classifyImages(images, utf_codes)
+                print("Classification completed")
+                # generate xml file for this image
+                xml_name = input_dir+"/"+file[:-4]
+                seg.createXMLFile(xml_data[0:len(pred_classes)], pred_classes, xml_name)
+                print("XML generated")
+                print("Processing", file, "finished")
+            else:
+                print("Segmentation completed, no characters were found in", file)
+                print("Processing", file, "finished")
     print("\nFinished processing all pgm files in the folder \""+input_dir+"\"")

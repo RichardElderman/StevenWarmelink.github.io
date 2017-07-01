@@ -1,6 +1,0 @@
-Run parameters
-Number of epochs: 100
-Hidden rate: 0.01
-Batch size: 500
-Final Test accuracy: 0.34445768772348034
-Time spent training: 0:17:19
