@@ -12,7 +12,6 @@ from datetime import datetime
 import math
 import sys
 
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 # from tensorflow.examples.tutorials.mnist import input_data
 
 
@@ -31,31 +30,26 @@ def binarize(img):
   return otsu
 
 #Reads all of the labelled images, and determined all different classes
-def readLabelledData(maxFiles):
+def readLabelledData(path):
   lbls = []
-  for i, file in enumerate(sorted(os.listdir('labelled'))):
+  for i, file in enumerate(sorted(os.listdir(path))):
     if file.endswith('.pgm'):
       utf = file[:4]
       if utf not in lbls:
         lbls.append(utf)
-      if i==maxFiles:
-        break;
 
   numlbl = len(lbls) # number of classes in the data set
   labelled_data = []
-  for i, file in enumerate(sorted(os.listdir('labelled'))):
+  for i, file in enumerate(sorted(os.listdir(path))):
     print(i,  end="\r")
     if file.endswith('.pgm'):
-      img = cv2.imread('labelled/' + file, 0)
+      img = cv2.imread(path+'/' + file, 0)
       img = img.reshape(1, sum(len(x) for x in img))
       bin_img = binarize(img) # for now binarize image here (must already be done, but not)
-      #print(np.unique(bin_img))
       utf = file[:4]
       class_number = lbls.index(utf)
       output = getDesiredOutput(numlbl, lbls.index(utf))
       labelled_data.append((output,bin_img, utf, class_number))
-    if i==maxFiles:
-      break;
   return labelled_data, lbls
 
 def createSubData(labelled_data, train_n, test_n, valid_n):
@@ -253,13 +247,17 @@ def optimize(num_iterations):
         # for placeholder variables in the TensorFlow graph.
         feed_dict_train = {x: x_batch,
                            y_true: y_true_batch}
+
+        print("d")
         # Run the optimizer using this batch of training data.
         # TensorFlow assigns the variables in feed_dict_train
         # to the placeholder variables and then runs the optimizer.
         session.run(optimizer, feed_dict=feed_dict_train)
+
+        print("e")
         done_it = done_it + 1
-        # Print status every 1 iteration.
-        if i % 1 == 0:
+        # Print status every 100 iterations.
+        if i % 3 == 0:
             # Calculate the accuracy on the training-set.
             acc = session.run(accuracy, feed_dict=feed_dict_train)
 
@@ -500,8 +498,8 @@ def saveModel(session):
     print("Model saved in file: %s" % save_path)
 
 def compareAccuracy(acc):
-    dir_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'checkpoints/')
-    accuracy_file = os.path.join(dir_path,'acc.txt')
+    dir_path = os.path.normpath('C:/Users/Richard/Desktop/HWR/checkpoints/')
+    accuracy_file = os.path.normpath(dir_path+'/acc.txt')
     print(repr(accuracy_file),repr(acc))
     acc_file = open(accuracy_file, 'r')
     old_acc = float(acc_file.read())
@@ -517,12 +515,14 @@ def compareAccuracy(acc):
 if __name__ =="__main__":
 
 
-    n_filters = int(sys.argv[2])
-    kernelsize = int(sys.argv[1])
 
-    train_batch_size    = 2000#int(sys.argv[1])
-    learning_rate       = 0.01#float(sys.argv[2])
-    num_iterations      = 400#int(sys.argv[3])
+    filter_size2 = int(sys.argv[1])
+    num_filters2 = int(sys.argv[2])
+
+
+    train_batch_size    = 500
+    learning_rate       = 0.01
+    num_iterations      = 400
 
     print("train batch size :" + repr(train_batch_size))
     print("learning rate    :" + repr(learning_rate))
@@ -530,21 +530,12 @@ if __name__ =="__main__":
     print("number of filters:" + repr(n_filters))
     print("kernel size      :" + repr(kernelsize))
 
-    dir_name = 'Results_' + ('%s' % datetime.now())
-    dir_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'runs/' + dir_name)
+    dir_name = 'Results_' + ('%s' % datetime.now()).replace(":", "_")
+    dir_path = os.path.normpath('C:/Users/Richard/Desktop/HWR/runs/' + dir_name) # os.path.join(os.path.dirname(os.path.abspath(__file__)), 'runs' + dir_name)
     os.makedirs(dir_path)
-    filter_size1 = 10  # Convolution filters are 5 x 5 pixels.
+    filter_size1 = 5  # Convolution filters are 5 x 5 pixels.
     num_filters1 = 16  # There are 16 of these filters.
 
-    # Convolutional Layer 2.
-    filter_size2 = kernelsize  # Convolution filters are 5 x 5 pixels.
-    num_filters2 = n_filters  # There are 36 of these filters.
-
-    filter_size3 = 8
-    num_filters3 = 24
-
-    filter_size4 = 10
-    num_filters4 = 16
 
     # Fully-connected layer.
     fc_size = 128  # Number of neurons in fully-connected layer.
@@ -625,29 +616,22 @@ if __name__ =="__main__":
                        num_filters=num_filters2,
                        use_pooling=True)
 
-    layer_conv4, weights_conv4 = \
-        new_conv_layer(input=layer_conv3,
-                       num_input_channels=num_filters2,
-                       filter_size=filter_size2,
-                       num_filters=num_filters2,
-                       use_pooling=True)
 
-    layer_conv5, weights_conv5 = \
-        new_conv_layer(input=layer_conv4,
-                       num_input_channels=num_filters2,
-                       filter_size=filter_size2,
-                       num_filters=num_filters2,
-                       use_pooling=True)
+    # layer_conv4, weights_conv4 = \
+    #     new_conv_layer(input=layer_conv3,
+    #                    num_input_channels=num_filters2,
+    #                    filter_size=filter_size2,
+    #                    num_filters=num_filters2,
+    #                    use_pooling=True)
 
-    layer_conv6, weights_conv6 = \
-        new_conv_layer(input=layer_conv5,
-                       num_input_channels=num_filters2,
-                       filter_size=filter_size2,
-                       num_filters=num_filters2,
-                       use_pooling=True)    
-                                            
+    # layer_conv5, weights_conv5 = \
+    #     new_conv_layer(input=layer_conv4,
+    #                    num_input_channels=num_filters2,
+    #                    filter_size=filter_size2,
+    #                    num_filters=num_filters2,
+    #                    use_pooling=True)
 
-    layer_flat, num_features = flatten_layer(layer_conv6)
+    layer_flat, num_features = flatten_layer(layer_conv3)
 
     print("Number of Features: ")
     print(num_features)
@@ -669,12 +653,13 @@ if __name__ =="__main__":
 
     #preditct
     y_pred = tf.nn.softmax(layer_fc2)
-    print(y_pred)
+
     y_pred_cls = tf.argmax(y_pred, dimension=1,name="output_to_restore")
 
     #cross entropy . Softmax
     cross_entropy = tf.nn.softmax_cross_entropy_with_logits(logits=layer_fc2,
                                                             labels=y_true)
+
     cost = tf.reduce_mean(cross_entropy)
 
     saver = tf.train.Saver()
@@ -684,26 +669,17 @@ if __name__ =="__main__":
 
     #Correct Pre
     correct_prediction = tf.equal(y_pred_cls, y_true_cls)
+
     accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
     #session
     session = tf.Session()
     session.run(tf.global_variables_initializer())
-
-    ## next line == error ###############################################################################
-    # print_test_accuracy()
+    print("Nieuwe ronde nieuwe kansen")
 
     time_spent = optimize(num_iterations)
 
-    # print_test_accuracy()
-
-    # optimize(num_iterations=50)
-
-    # print_test_accuracy()
-
-    # optimize(num_iterations=50)
-
-
+    print("klaar")
     acc = print_test_accuracy()
 
     results_file = os.path.join(dir_path, 'parameters.txt')
@@ -712,6 +688,8 @@ if __name__ =="__main__":
     results.write('Number of epochs: ' + str(num_iterations) + '\n')
     results.write('Hidden rate: ' + str(learning_rate) + '\n')
     results.write('Batch size: ' + str(train_batch_size) + '\n')
+    results.write('Number of filters: ' + str(num_filters2) + '\n')
+    results.write('Filter size: ' + str(filter_size2) + '\n')
     results.write('Final Test accuracy: ' + str(acc) + '\n')
     results.write('Time spent training: ' + time_spent + '\n')
     results.close()
@@ -726,10 +704,11 @@ if __name__ =="__main__":
         acc_file.write('Number of epochs: ' + str(num_iterations) + '\n')
         acc_file.write('Hidden rate: ' + str(learning_rate) + '\n')
         acc_file.write('Batch size: ' + str(train_batch_size) + '\n')
+        acc_file.write('Number of filters: ' + str(num_filters2) + '\n')
+        acc_file.write('Filter size: ' + str(filter_size2) + '\n')
         acc_file.write('Final Test accuracy: ' + str(acc) + '\n')
         acc_file.write('Time spent training: ' + time_spent + '\n')
         acc_file.close()
         saveModel(session)
-
 
 
