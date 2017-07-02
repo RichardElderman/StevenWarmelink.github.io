@@ -62,7 +62,7 @@ def houghRotation(img, rho, theta, threshold, minLineLength, maxLineGap):
 def cropImage(img, h_thresh, v_thresh, h_dens, v_dens):
 	height, width = img.shape
 
-	padding = 10
+	padding = 15
 
 	#print "Image height: ", height
 	#print "Image width:  ", width
@@ -97,13 +97,16 @@ def cropImage(img, h_thresh, v_thresh, h_dens, v_dens):
 	# 			img[j,i] = 255			
 
 
-	[x0, x1] = seqList(h_lines)
-	[y0, y1] = seqList(v_lines)
+	if len(h_lines) > 0:
+		[x0, x1] = seqList(h_lines)
+	else: 
+		x0 = 0
+		x1 = height-1
 
 	# print h_lines
 	#showImages([img])
 
-	subimg = img[x0-padding:x1+padding,0:width-1]
+	subimg = img[max(0,x0-padding):min(x1+padding,height-1),0:width-1]
 
 	# cv2.imshow("img",subimg)
 	# cv2.waitKey(0)
@@ -115,7 +118,7 @@ def cropImage(img, h_thresh, v_thresh, h_dens, v_dens):
 	#v_pixel_density = calcVerPixelDensity(subimg)
 	#drawDensities(h_pixel_density,v_pixel_density)
 
-	return subimg, [x0,x1]
+	return subimg, [max(1,x0-padding),min(height-1,x1+padding)]
 
 
 
@@ -151,7 +154,7 @@ def seqList(vh_list):
 	# print "x1: ", vh_list[max_index-1]
 	# print "x2: ", vh_list[(max_index-1)+(max_len)]
 
-	return [vh_list[max_index-1], vh_list[(max_index-1)+(max_len)]]
+	return [vh_list[max_index], vh_list[min((max_index)+(max_len),len(vh_list)-1)]]
 
 # Function which, given an image, returns a list of vertical pixel densities.
 def calcVerPixelDensity(img):
@@ -231,11 +234,13 @@ def createSubImage(img,subimg):
 def removeSubimagesOutsideRange(images):
 	rmv_array = []
 
-	for i in range (0,len(images)-1):
-		total = sum(calcHorPixelDensity(images[i]))
-
+	for i in range (0,len(images)):
 		height, width = images[i].shape
-		if total < 0.02*height*width or total > 0.60*height*width:
+		image = images[i]
+		
+		total = sum(calcHorPixelDensity(image))
+
+		if total < 0.02*height*width or total > 0.45*height*width:
 			rmv_array.append(i)
 
 	rmv_array = sorted(rmv_array, reverse=True)
@@ -322,21 +327,19 @@ def splitImage(img, seperators):
 	seperator_pairs = []
 	
 	if len(seperators) > 0:
-		images.append(createSubImage(img,img[0:height-1,0:seperators[0]]))
+		images.append(binarize(createSubImage(img,img[0:height-1,0:seperators[0]])))
 		seperator_pairs.append([0, seperators[0]])	
 
 		for i in range (0,len(seperators)-2):
-			images.append(createSubImage(img,img[0:height-1,seperators[i]:seperators[i+1]]))	
+			images.append(binarize(createSubImage(img,img[0:height-1,seperators[i]:seperators[i+1]])))	
 			seperator_pairs.append([seperators[i], seperators[i+1]])	
 
-		images.append(createSubImage(img,img[0:height-1,seperators[len(seperators)-2]:seperators[len(seperators)-1]]))	
+		images.append(binarize(createSubImage(img,img[0:height-1,seperators[len(seperators)-2]:seperators[len(seperators)-1]])))	
 		seperator_pairs.append([seperators[len(seperators)-2], seperators[len(seperators)-1]])
 
 	images = checkForMultipleCharacters(images)
 
 	images, rmv_array = removeSubimagesOutsideRange(images)
-	
-
 
 	res_seperator_pairs = []
 	for i in range(0,len(seperator_pairs)):
@@ -345,8 +348,8 @@ def splitImage(img, seperators):
 	
 	#print(repr(res_seperator_pairs), repr(rmv_array))
 
-	images = resizeImages(images)
 
+	images = resizeImages(images)
 
 	return images, res_seperator_pairs
 
@@ -392,12 +395,12 @@ def cropSquare(image):
 	#Resize the image to 128x128 pixels
 	height, width = cropped_image.shape
 	if(height == 0 or width == 0):
-		print("IMAGE NONEXISTENT (dimensions 0x0)")
-		return None
+		#print("IMAGE NONEXISTENT (dimensions 0x0)")
+		return None, -1
 	else:
 		cropped_image = cv2.resize(cropped_image, (128, 128))
 	
-	return cropped_image
+	return cropped_image, 1
 
 def warpToCoordinates(img_height, img_y, seperator_pairs):
 	RoIs = []
@@ -442,18 +445,23 @@ def rotateCoordinates(coordinateList,img_angle, img_center,img_height,img_width)
 		for coordinate in box:
 			x_old = coordinate[0]
 			y_old = coordinate[1]
-			delta_x = middle_x - x_old
-			delta_y = middle_y - y_old 
+			delta_x = x_old - middle_x 
+			delta_y = y_old - middle_y
+			if delta_y == 0:
+				delta_y = 1 
 			length = np.sqrt(delta_x*delta_x + delta_y*delta_y)
 			alpha = np.rad2deg(np.arctan(delta_x / delta_y))
 
 			beta = alpha - img_angle
+			new_delta_x = -np.sin(np.deg2rad(alpha)) * length
+			new_delta_y = -np.cos(np.deg2rad(alpha)) * length
+			if(new_delta_x > 0 and delta_x < 0) or (new_delta_x <0 and delta_x > 0):
+				new_delta_x = new_delta_x*-1
+			if(new_delta_y > 0 and delta_y < 0) or (new_delta_y <0 and delta_y > 0):
+				new_delta_y = new_delta_y*-1
 
-			new_delta_x = -np.sin(np.deg2rad(beta)) * length
-			new_delta_y = -np.cos(np.deg2rad(beta)) * length
-
-			x_new = int(min(max(0,middle_x - new_delta_x),img_width))
-			y_new = int(min(max(0,middle_y - new_delta_y),img_height))
+			x_new = int(min(max(0,middle_x + new_delta_x),img_width))
+			y_new = int(min(max(0,middle_y + new_delta_y),img_height))
 
 			tupleList.append((x_new,y_new))
 
@@ -470,6 +478,8 @@ def rotateCoordinates(coordinateList,img_angle, img_center,img_height,img_width)
 
 		width = max_x - min_x
 		height= max_y - min_y
+		if height < 70:
+			height = 70
 		x = min_x
 		y = min_y
 
@@ -587,22 +597,37 @@ def loopthroughimages(readStr):
 
 	images, seperator_pairs = splitImage(img, seperators)
 
-	coordinateList = warpToCoordinates(img_height,img_y,seperator_pairs)
+	
+	rmv_array = []
+	square_images = []
+	for i in range (0,len(images)):
+		image = images[i]
+		tempImg, rem = cropSquare(image)
+		if tempImg is not None:
+			square_images.append(tempImg)
+		else: 
+			rmv_array.append(rem)
+
+	rmv_array = sorted(rmv_array, reverse=True)
+
+	correct_sep_pairs = []
+	for i in range(0,len(seperator_pairs)):
+		if not (i in rmv_array):
+			correct_sep_pairs.append(seperator_pairs[i]) 
+
+	for pair in correct_sep_pairs:
+		if pair[1] - pair[0] > 200:
+			correct_sep_pairs.remove(pair)
+
+
+	coordinateList = warpToCoordinates(img_height,img_y,correct_sep_pairs)
 
 	rotatedList = rotateCoordinates(coordinateList,img_angle,img_center,height, width)
 
 	#showRoIs(rotatedList, inputImg)
 
-	square_images = []
-	for image in images:
-		tempImg = cropSquare(image)
-		if tempImg is not None:
-			square_images.append(tempImg)
-
-
 	xml_data = createXMLData(readStr, rotatedList)
 	return square_images, xml_data
-
 
 
 	
