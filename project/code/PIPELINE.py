@@ -68,7 +68,7 @@ if __name__ =="__main__":
     graph = tf.get_default_graph()
 
     # assign a variable to the parts in the CNN that will be called in a function (input and output layer)
-    y_pred_cls = graph.get_tensor_by_name("output_to_restore:0") ### the name must be stated in the model that was saved
+    y_pred_cls = graph.get_tensor_by_name("output_to_resotre:0") ### the name must be stated in the model that was saved
     x = graph.get_tensor_by_name("x:0") ### the name must be stated in the model that was saved
 
     print("Model loaded.")
