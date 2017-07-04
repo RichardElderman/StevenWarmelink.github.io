@@ -78,7 +78,7 @@ if __name__ =="__main__":
             # process input image file
             print("\nProcessing", file)
             # get list of cropped files, and list of data for xml file
-            images, xml_data = seg.loopthroughimages(input_dir+"/"+file)
+            images, xml_data = seg.loopthroughimages(input_dir+"/"+file,i)
             # classify cropped images, return list of utf codes
             if(len(images)>0):
                 print("Segmentation completed,", len(images), "characters were found")

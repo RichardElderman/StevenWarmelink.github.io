@@ -3,6 +3,8 @@ import numpy as np
 import math
 import os
 import sys
+from datetime import datetime
+
 
 # Function which binarizes the image by performing Otsu binarization after applying 
 # a guassian blur. 
@@ -453,8 +455,8 @@ def rotateCoordinates(coordinateList,img_angle, img_center,img_height,img_width)
 			alpha = np.rad2deg(np.arctan(delta_x / delta_y))
 
 			beta = alpha - img_angle
-			new_delta_x = -np.sin(np.deg2rad(alpha)) * length
-			new_delta_y = -np.cos(np.deg2rad(alpha)) * length
+			new_delta_x = -np.sin(np.deg2rad(beta)) * length
+			new_delta_y = -np.cos(np.deg2rad(beta)) * length
 			if(new_delta_x > 0 and delta_x < 0) or (new_delta_x <0 and delta_x > 0):
 				new_delta_x = new_delta_x*-1
 			if(new_delta_y > 0 and delta_y < 0) or (new_delta_y <0 and delta_y > 0):
@@ -539,7 +541,7 @@ def createXMLFile(locationData, utfs, xml_file_name):
 		i = i + 1
 	exportXML(XML, xml_file_name)
 
-def showRoIs(rotatedList, inputImg):
+def showRoIs(rotatedList, inputImg,it):
 	height, width = inputImg.shape 
 	for v_pixel in range(0,width):
 		for h_pixel in range(0,height):
@@ -550,14 +552,14 @@ def showRoIs(rotatedList, inputImg):
 				if (h_pixel == list[1] or h_pixel == list[1]+list[3]) and v_pixel > list[0] and v_pixel < list[0]+list[2]:
 					inputImg[h_pixel,v_pixel] = 0
 				
-	writeImages([inputImg], "0000")
+	writeImages([inputImg],  it)
 
 # Function which saves all images in list as jpg file in current folder
 def writeImages(images, readstr):
 	for i in range(0,len(images)):
-		cv2.imwrite("segmentation/" + readstr + "_" + str(i).zfill(2) + ".jpg",images[i])
+		cv2.imwrite("ROIs/__SEGMENTED__" + str(readstr) +  ".jpg",images[i])
 
-def loopthroughimages(readStr): 
+def loopthroughimages(readStr,i): 
 
 	# Read image
 
@@ -623,8 +625,8 @@ def loopthroughimages(readStr):
 	coordinateList = warpToCoordinates(img_height,img_y,correct_sep_pairs)
 
 	rotatedList = rotateCoordinates(coordinateList,img_angle,img_center,height, width)
-
-	#showRoIs(rotatedList, inputImg)
+	
+	#showRoIs(rotatedList, inputImg,i)
 
 	xml_data = createXMLData(readStr, rotatedList)
 	return square_images, xml_data
